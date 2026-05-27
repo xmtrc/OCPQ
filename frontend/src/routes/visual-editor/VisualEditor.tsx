@@ -30,7 +30,6 @@ import {
 	ContextMenuItem,
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Label } from "@/components/ui/label";
 import { Toggle } from "@/components/ui/toggle";
 import { useBackend } from "@/hooks";
 import "@/lib/editor-loader";
@@ -56,7 +55,7 @@ import {
 	edgeTypes,
 	GATE_NODE_TYPE,
 	NODE_TYPE_SIZE,
-	nodeTypes,
+	nodeTypes, EVENT_NODE_TYPE, OBJECT_NODE_TYPE, SUBQUERY_NODE_TYPE,
 } from "./helper/const";
 import DatabaseTranslationButton from "./helper/DatabaseTranslationButton";
 import {
@@ -71,10 +70,10 @@ import {
 	ALL_GATE_TYPES,
 	type ConstraintInfo,
 	type EvaluationRes,
-	type EvaluationResPerNodes,
+	type EvaluationResPerNodes, EventNodeData,
 	type EventTypeLinkData,
 	type EventTypeNodeData,
-	type GateNodeData,
+	type GateNodeData, ObjectNodeData, SubqueryNodeData,
 } from "./helper/types";
 import { VisualEditorContext } from "./helper/VisualEditorContext";
 import ViolationDetailsSheet from "./ViolationDetailsSheet";
@@ -88,7 +87,7 @@ interface VisualEditorProps {
 export default function VisualEditor(props: VisualEditorProps) {
 	const { setInstance, registerOtherDataGetter, otherData, flushData, scheduleAutoSave } =
 		useContext(FlowContext);
-	const instance = useReactFlow<Node<EventTypeNodeData | GateNodeData>, Edge<EventTypeLinkData>>();
+	const instance = useReactFlow<Node<EventTypeNodeData | GateNodeData | EventNodeData | ObjectNodeData | SubqueryNodeData>, Edge<EventTypeLinkData>>();
 
 	const [violationDetails, setViolationDetails] = useState<{
 		id: string;
@@ -221,7 +220,7 @@ export default function VisualEditor(props: VisualEditorProps) {
 	const getTypesForVariable = useCallback(
 		(nodeID: string, variable: number, type: "event" | "object"): OCELType[] => {
 			const edges = instance.getEdges();
-			let node = instance.getNode(nodeID) as Node<EventTypeNodeData | GateNodeData> | undefined;
+			let node = instance.getNode(nodeID) as Node<EventTypeNodeData | GateNodeData | EventNodeData | ObjectNodeData | SubqueryNodeData> | undefined;
 			while (
 				node != null &&
 				(!("box" in node.data) ||
@@ -316,6 +315,96 @@ export default function VisualEditor(props: VisualEditorProps) {
 								obVarLabels: {},
 							},
 						} satisfies EventTypeNodeData,
+					},
+				];
+			});
+		},
+		[instance],
+	);
+
+	const addNewEventNode = useCallback(
+		(x: number | undefined = undefined, y: number | undefined = undefined) => {
+			instance.setNodes((nodes) => {
+				const pos =
+					x === undefined || y === undefined
+						? instance.screenToFlowPosition({
+							x: window.innerWidth / 2,
+							y: window.innerHeight / 1.5,
+						})
+						: { x, y };
+				return [
+					...nodes,
+					{
+						id: v4(),
+						type: EVENT_NODE_TYPE,
+						position: {
+							x: pos.x,
+							y: pos.y,
+						},
+						data: {
+							displayName: "EventNode",
+							eventTypes: [],
+						} satisfies EventNodeData,
+					},
+				];
+			});
+		},
+		[instance],
+	);
+
+	const addNewObjectNode = useCallback(
+		(x: number | undefined = undefined, y: number | undefined = undefined) => {
+			instance.setNodes((nodes) => {
+				const pos =
+					x === undefined || y === undefined
+						? instance.screenToFlowPosition({
+							x: window.innerWidth / 2,
+							y: window.innerHeight / 1.5,
+						})
+						: { x, y };
+				return [
+					...nodes,
+					{
+						id: v4(),
+						type: OBJECT_NODE_TYPE,
+						position: {
+							x: pos.x,
+							y: pos.y,
+						},
+						data: {
+							displayName: "ObjectNode",
+							objectTypes: [],
+						} satisfies ObjectNodeData,
+					},
+				];
+			});
+		},
+		[instance],
+	);
+
+	const addNewSubqueryNode = useCallback(
+		(x: number | undefined = undefined, y: number | undefined = undefined) => {
+			instance.setNodes((nodes) => {
+				const pos =
+					x === undefined || y === undefined
+						? instance.screenToFlowPosition({
+							x: window.innerWidth / 2,
+							y: window.innerHeight / 1.5,
+						})
+						: { x, y };
+				return [
+					...nodes,
+					{
+						id: v4(),
+						type: SUBQUERY_NODE_TYPE,
+						resizing: true,
+						position: {
+							x: pos.x,
+							y: pos.y,
+						},
+						data: {
+							displayName: "SubqueryNode",
+						} satisfies SubqueryNodeData,
 					},
 				];
 			});
@@ -517,7 +606,22 @@ export default function VisualEditor(props: VisualEditorProps) {
 				},
 				onNodeDataChange: (id, newData) => {
 					if (newData === undefined) {
-						instance.deleteElements({ nodes: [{ id }] });
+						if (instance.getNode(id)?.type === SUBQUERY_NODE_TYPE) {
+							let queue: string[] = [id];
+							while (queue.length != 0) {
+								let currentId = queue.shift();
+								if (currentId != undefined) {
+									instance.getNodes().filter((node) => {
+										return node.parentId === currentId;
+									}).map((node) => {
+										queue.push(node.id)
+									});
+									instance.deleteElements({ nodes: [{ id: currentId }] });
+								}
+							}
+						} else {
+							instance.deleteElements({nodes: [{id}]});
+						}
 					} else {
 						instance.updateNodeData(id, newData);
 					}
@@ -560,6 +664,30 @@ export default function VisualEditor(props: VisualEditorProps) {
 						}}
 					>
 						Add Node
+					</ContextMenuItem>
+					<ContextMenuItem
+						onClick={() => {
+							const { x, y } = instance.screenToFlowPosition(contextMenuPos.current);
+							addNewEventNode(x, y);
+						}}
+					>
+						Add Event Node
+					</ContextMenuItem>
+					<ContextMenuItem
+						onClick={() => {
+							const { x, y } = instance.screenToFlowPosition(contextMenuPos.current);
+							addNewObjectNode(x, y);
+						}}
+					>
+						Add Object Node
+					</ContextMenuItem>
+					<ContextMenuItem
+						onClick={() => {
+							const { x, y } = instance.screenToFlowPosition(contextMenuPos.current);
+							addNewSubqueryNode(x, y);
+						}}
+					>
+						Add Subquery Node
 					</ContextMenuItem>
 				</ContextMenuContent>
 			</ContextMenu>
@@ -626,108 +754,7 @@ export default function VisualEditor(props: VisualEditorProps) {
 							variant="outline"
 							title="Evaluate (Hold Shift for Performance Evaluation)"
 							className="relative bg-fuchsia-100 disabled:bg-fuchsia-200 border-fuchsia-300 hover:bg-fuchsia-200 hover:border-fuchsia-300"
-							onClick={async (ev) => {
-								setEvaluationLoading(true);
-								const { tree, nodesOrder } = mergeSubTrees(
-									evaluateConstraints(instance.getNodes(), instance.getEdges()),
-								);
-								const measurePerformance = ev.shiftKey;
-								if (measurePerformance) {
-									toast(
-										"Measuring performance by evaluating constraint 10+1 times. The first 10 execution times in seconds will be saved as a JSON file in your Downloads folder.",
-									);
-								}
-								try {
-									const res = await toast.promise(
-										backend["ocel/check-constraints-box"](tree, measurePerformance),
-										{
-											loading: "Evaluating...",
-											success: (res) => (
-												<span>
-													<b>Evaluation finished</b>
-													<br />
-													<span>
-														Situations per step:
-														<br />
-														<span className="font-mono">
-															{res.nodeSummaries.map((r) => r.situationCount).join(", ")}
-														</span>
-														<br />
-														Violations per step:
-														<br />
-														<span className="font-mono">
-															{res.nodeSummaries.map((r) => r.situationViolatedCount).join(", ")}
-														</span>
-													</span>
-												</span>
-											),
-											error: (e) => (
-												<>
-													Evaluation failed
-													<br />
-													{String(e)}
-												</>
-											),
-										},
-									);
-									if (res.bindingsSkipped) {
-										toast.error(
-											(x) => (
-												<>
-													<div className="">
-														<b className="text-red-600">Some bindings were skipped!</b>
-														<br />
-														<p className="text-sm">
-															The query yielded too many results and could not be fully computed.
-															<br />
-															The returned counts and results represent just a small sample.
-															<br />
-														</p>
-														<div className="text-right">
-															<Button onClick={() => toast.dismiss(x.id)} variant="destructive">
-																Understood
-															</Button>
-														</div>
-													</div>
-												</>
-											),
-											{
-												duration: Number.POSITIVE_INFINITY,
-												position: "top-center",
-											},
-										);
-									}
-									const evalRes: Record<string, EvaluationRes> = {};
-									const evalNodes: Record<string, BindingBoxTreeNode> = {};
-									const nodeIdtoIndex: Record<string, number> = {};
-									res.nodeSummaries.forEach((summary, i) => {
-										evalRes[nodesOrder[i].id] = summary;
-									});
-									tree.nodes.forEach((node, i) => {
-										evalNodes[nodesOrder[i].id] = node;
-										nodeIdtoIndex[nodesOrder[i].id] = i;
-									});
-									setViolationInfo((vi) => ({
-										...vi,
-										violationsPerNode: {
-											evalRes,
-											evalVersion: res.evalVersion,
-											evalNodes,
-											nodeIdtoIndex,
-										},
-									}));
-									flushData({
-										violations: {
-											evalRes,
-											evalVersion: res.evalVersion,
-											evalNodes,
-											nodeIdtoIndex,
-										},
-									});
-								} finally {
-									setEvaluationLoading(false);
-								}
-							}}
+							// TODO: Add eval back
 						>
 							{isEvaluationLoading && (
 								<div className="w-7 h-7 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -742,74 +769,7 @@ export default function VisualEditor(props: VisualEditorProps) {
 								)}
 							/>
 						</Button>
-						{filterMode === "shown" && (
-							<AlertHelper
-								trigger={
-									<Button
-										variant="outline"
-										size="sm"
-										className="bg-white"
-										title="Export filtered OCEL"
-									>
-										<TbFileExport size={22} />
-									</Button>
-								}
-								mode="promise"
-								title="Export Filtered OCEL"
-								initialData={{
-									exportFormat: "JSON" as "JSON" | "XML" | "SQLITE",
-								}}
-								content={({ data, setData }) => {
-									return (
-										<div>
-											<Label>OCEL Export Format</Label>
-											<br />
-											<Combobox
-												value={data.exportFormat}
-												options={[
-													{ value: "JSON", label: "JSON" },
-													{ value: "XML", label: "XML" },
-													{ value: "SQLITE", label: "SQLite" },
-												]}
-												name="Export format"
-												onChange={(v) => {
-													setData({ ...data, exportFormat: v as any });
-												}}
-											/>
-										</div>
-									);
-								}}
-								submitAction={"Export"}
-								onSubmit={async (cfg, ev) => {
-									if ((cfg.exportFormat as any) === "") {
-										ev.preventDefault();
-										ev.stopPropagation();
-										toast("Please select a valid export format!");
-										throw new Error("Invalid Option");
-									}
-									setEvaluationLoading(true);
-									const { tree } = mergeSubTrees(
-										evaluateConstraints(instance.getNodes(), instance.getEdges()),
-									);
-									const type: "JSON" | "XML" | "SQLITE" = cfg.exportFormat;
-									try {
-										const res = await toast.promise(backend["ocel/export-filter-box"](tree, type), {
-											success: "Exported!",
-											loading: "Exporting...",
-											error: "Failed to export!",
-										});
-										if (res) {
-											backend["download-blob"](
-												res,
-												`${props.constraintInfo.name}-export.${type.toLowerCase()}`,
-											);
-										}
-									} finally {
-										setEvaluationLoading(false);
-									}
-								}}
-							/>
-						)}
+
 
 						{violationInfo.violationsPerNode !== undefined && (
 							<Button
@@ -872,7 +832,6 @@ export default function VisualEditor(props: VisualEditorProps) {
 							>
 								<ImageIcon />
 							</Button>
-							<DatabaseTranslationButton instance={instance} />
 						</div>
 					</div>
 					{props.children}

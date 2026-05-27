@@ -1,7 +1,14 @@
 import { type Edge, type Node, useReactFlow } from "@xyflow/react";
 import ELK, { type ElkNode, type LayoutOptions } from "elkjs/lib/elk.bundled.js";
 import { useCallback } from "react";
-import type { EventTypeLinkData, EventTypeNodeData, GateNodeData } from "./types";
+import {
+	EventNodeData,
+	EventTypeLinkData,
+	EventTypeNodeData,
+	GateNodeData,
+	ObjectNodeData,
+	SubqueryNodeData
+} from "./types";
 
 const elk = new ELK();
 // void (async () => {
@@ -47,7 +54,7 @@ export const useLayoutedElements = () => {
 
 // Apply layout in place
 export async function applyLayoutToNodes(
-	nodes: Node<EventTypeNodeData | GateNodeData>[],
+	nodes: Node<EventTypeNodeData | GateNodeData | EventNodeData | ObjectNodeData | SubqueryNodeData>[],
 	edges: Edge<any>[],
 	options: Partial<LayoutOptions> = {},
 ) {

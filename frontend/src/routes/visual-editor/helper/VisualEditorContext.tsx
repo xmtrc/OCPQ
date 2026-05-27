@@ -3,10 +3,10 @@ import type { EventVariable } from "@/types/generated/EventVariable";
 import type { ObjectVariable } from "@/types/generated/ObjectVariable";
 import type { OCELInfo, OCELType } from "@/types/ocel";
 import type {
-	EvaluationResPerNodes,
+	EvaluationResPerNodes, EventNodeData,
 	EventTypeLinkData,
 	EventTypeNodeData,
-	GateNodeData,
+	GateNodeData, ObjectNodeData, SubqueryNodeData,
 } from "./types";
 
 export type VisualEditorContextValue = {
@@ -17,7 +17,7 @@ export type VisualEditorContextValue = {
 	) => unknown;
 	onNodeDataChange: (
 		id: string,
-		newData: Partial<EventTypeNodeData | GateNodeData> | undefined,
+		newData: Partial<EventTypeNodeData | GateNodeData | EventNodeData | ObjectNodeData | SubqueryNodeData> | undefined,
 	) => unknown;
 	onEdgeDataChange: (id: string, newData: Partial<EventTypeLinkData> | undefined) => unknown;
 	ocelInfo?: OCELInfo;

@@ -2,6 +2,7 @@ import type { BindingBox } from "@/types/generated/BindingBox";
 import type { BindingBoxTree } from "@/types/generated/BindingBoxTree";
 import type { BindingBoxTreeNode } from "@/types/generated/BindingBoxTreeNode";
 import type { NodeSummary } from "@/types/generated/NodeSummary";
+import {OCELType} from "@/types/ocel.ts";
 
 export type EvaluationResPerNodes = {
 	evalRes: Record<string, EvaluationRes>;
@@ -13,6 +14,23 @@ export type EvaluationResPerNodes = {
 export type EvaluationRes = NodeSummary;
 
 export type CountConstraint = { min: number; max: number };
+
+export type EventNodeData = {
+	displayName?: string,
+	color?: string,
+	eventTypes: string[],
+};
+
+export type ObjectNodeData = {
+	displayName?: string,
+	color?: string,
+	objectTypes: string[],
+};
+
+export type SubqueryNodeData = {
+	displayName?: string,
+	color?: string,
+};
 
 export type EventTypeNodeData = {
 	hideViolations?: boolean;
