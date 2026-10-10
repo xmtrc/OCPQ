@@ -12,6 +12,7 @@ import OCDeclareViewer from "./routes/oc-declare/OCDeclareViewer.tsx";
 import OcelInfoViewer from "./routes/ocel-info/OcelInfoViewer.tsx";
 import PathSchemasViewer from "./routes/path-schemas/PathSchemasViewer.tsx";
 import OuterVisualEditor from "./routes/visual-editor/outer-visual-editor/OuterVisualEditor.tsx";
+import VisualEditorOuter from "./routes/visual-editor-2/outer-visual-editor/OuterVisualEditor.tsx";
 
 /** Dev-only smoke page for the propel components. Lazy plus a `DEV` guard keeps it out of the
  *  production bundle. */
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
 		element: <App />,
 		errorElement: <ErrorPage />,
 		children: [
+			{ path: "/constraints-new", element: <VisualEditorOuter /> },
 			{ path: "/constraints", element: <OuterVisualEditor /> },
 			{ path: "/ocel-info", element: <OcelInfoViewer /> },
 			{ path: "/graph", element: <OcelGraphViewer /> },
