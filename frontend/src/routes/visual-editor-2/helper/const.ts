@@ -40,6 +40,16 @@ export const edgeTypes = {
 };
 
 export const edgeTypeLabels = {
+	[PredicateType.EventToObject]: "Event to Object",
+	[PredicateType.ObjectToObject]: "Object to Object",
+	[PredicateType.TimeBetweenEvents]: "Time Between Events",
+	[PredicateType.EventAttributeRange]: "Event Attribute Range",
+	[PredicateType.ObjectAttributeRange]: "Object Attribute Range",
+	[PredicateType.ChildBindingSetEquals]: "Child Binding Set Equals",
+	[PredicateType.OrAnySatisfied]: "Or Any Satisfied",
+};
+
+export const edgeTypeShortLabels = {
 	[PredicateType.EventToObject]: "E2O",
 	[PredicateType.ObjectToObject]: "O2O",
 	[PredicateType.TimeBetweenEvents]: "TBE",
@@ -107,6 +117,7 @@ export const defaultEdgeData = {
 		({
 			...baseEdgeData,
 			type: PredicateType.ChildBindingSetEquals,
+			projected: false,
 		}) satisfies ChildBindingSetEqualsData,
 	[PredicateType.OrAnySatisfied]: () => ({
 		...baseEdgeData,

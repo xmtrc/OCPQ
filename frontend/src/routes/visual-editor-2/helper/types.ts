@@ -80,6 +80,7 @@ export type ObjectAttributeRangePredicate = Predicate & {
 
 export type ChildBindingSetSizePredicate = Predicate & {
 	type: PredicateType.ChildBindingSetSize;
+	projected: boolean;
 	projectedNodeId?: string;
 	min?: number;
 	max?: number;
@@ -87,6 +88,7 @@ export type ChildBindingSetSizePredicate = Predicate & {
 
 export type ChildBindingSetEqualsPredicate = Predicate & {
 	type: PredicateType.ChildBindingSetEquals;
+	projected: boolean;
 	projectedNodeAId?: string;
 	projectedNodeBId?: string;
 };
