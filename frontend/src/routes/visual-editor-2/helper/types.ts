@@ -45,9 +45,9 @@ export enum TimeMode {
 }
 
 export type ObjectAttributeTimeMode =
-	| { mode: TimeMode.Always }
-	| { mode: TimeMode.Sometime }
-	| { mode: TimeMode.AtEvent; eventNodeId: string };
+	| { timeMode: TimeMode.Always }
+	| { timeMode: TimeMode.Sometime }
+	| { timeMode: TimeMode.AtEvent; eventNodeId: string };
 
 export type EventToObjectPredicate = Predicate & {
 	type: PredicateType.EventToObject;

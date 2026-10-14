@@ -1,6 +1,6 @@
 import {
-	edgeTypeShortLabels,
-	edgeTypeLabels,
+	predicateTypeShortLabels,
+	predicateTypeLabels,
 	type edgeTypes,
 } from "@/routes/visual-editor-2/helper/const.ts";
 import { PredicateMode } from "@/routes/visual-editor-2/helper/types.ts";
@@ -36,24 +36,12 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import DeleteDialog from "@/routes/visual-editor-2/helper/common/DeleteDialog.tsx";
 import type { EdgeDataTypes } from "@/routes/visual-editor-2/helper/flowTypes.ts";
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils.ts";
+import type { VariantProps } from "class-variance-authority";
+import PredicateLabel, {
+	type PredicateLabelVariants,
+} from "@/routes/visual-editor-2/helper/common/PredicateLabel.tsx";
 
-const predicateEdgeVariants = cva(
-	"flex items-center font-semibold text-sm w-fit min-w-6 h-6 px-2 rounded-full transition duration-200",
-	{
-		variants: {
-			flavor: {
-				e2o: "bg-blue-100 hover:bg-blue-200",
-				o2o: "bg-green-100 hover:bg-green-200",
-				tbe: "bg-yellow-100 hover:bg-yellow-200",
-				cbe: "bg-red-100 hover:bg-red-200",
-			},
-		},
-	},
-);
-
-interface PredicateEdgeProps extends VariantProps<typeof predicateEdgeVariants> {
+interface PredicateEdgeProps extends VariantProps<typeof PredicateLabelVariants> {
 	type: keyof typeof edgeTypes;
 	label?: string;
 	edgeProps: EdgeProps<Edge<EdgeDataTypes>>;
@@ -121,16 +109,19 @@ export default function PredicateEdge({
 							className="nodrag nopan z-1002"
 							onClick={initEditAlert}
 						>
-							<div className={cn(predicateEdgeVariants({ flavor }), data?.color)}>
-								{edgeTypeShortLabels[type]} {data?.mode}
-								{label && `: ${label}`}
-							</div>
+							<PredicateLabel
+								type={type}
+								mode={data?.mode}
+								flavor={flavor}
+								color={data?.color}
+								label={label}
+							/>
 						</div>
 					</ContextMenuTrigger>
 					<ContextMenuPortal>
 						<ContextMenuContent>
 							<ContextMenuItem onSelect={initEditAlert}>
-								Edit {edgeTypeShortLabels[type]} {data?.mode}
+								Edit {predicateTypeShortLabels[type]} {data?.mode}
 							</ContextMenuItem>
 							<div className="border-t my-1 mx-2"></div>
 							<ContextMenuItem>Cancel</ContextMenuItem>
@@ -142,7 +133,7 @@ export default function PredicateEdge({
 									}, 100);
 								}}
 							>
-								<LuTrash className="mr-1" /> Delete {edgeTypeShortLabels[type]} {data?.mode}
+								<LuTrash className="mr-1" /> Delete {predicateTypeShortLabels[type]} {data?.mode}
 							</ContextMenuItem>
 						</ContextMenuContent>
 					</ContextMenuPortal>
@@ -157,8 +148,8 @@ export default function PredicateEdge({
 						<AlertDialogHeader>
 							<AlertDialogTitle>
 								{data?.isInitialized
-									? `Edit ${edgeTypeLabels[type]} ${data?.mode}`
-									: `Add ${edgeTypeLabels[type]} Relation`}
+									? `Edit ${predicateTypeLabels[type]} ${data?.mode}`
+									: `Add ${predicateTypeLabels[type]} Relation`}
 							</AlertDialogTitle>
 							<AlertDialogDescription>
 								<span>Use this relation as a filter or as a constraint.</span>
@@ -205,7 +196,7 @@ export default function PredicateEdge({
 				</AlertDialog>
 				<DeleteDialog
 					open={deleteAlertOpen}
-					toBeDeleted={`${edgeTypeShortLabels[type]} ${data?.mode}`}
+					toBeDeleted={`${predicateTypeShortLabels[type]} ${data?.mode}`}
 					onOpenChange={setDeleteAlertOpen}
 					onDelete={() => onEdgeDataChange(id, undefined)}
 				/>

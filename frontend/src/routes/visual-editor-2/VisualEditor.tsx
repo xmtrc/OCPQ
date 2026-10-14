@@ -35,7 +35,7 @@ import { v4 } from "uuid";
 import {
 	defaultEdgeData,
 	defaultNodeData,
-	edgeTypeShortLabels,
+	predicateTypeShortLabels,
 	edgeTypes,
 	EVENT_NODE_TYPE,
 	nodeTypes,
@@ -183,7 +183,7 @@ export default function VisualEditor(props: VisualEditorProps) {
 						<b>Invalid connection</b>
 						<br />
 						No supporting{" "}
-						{edgeTypeShortLabels[edgeType as keyof typeof edgeTypeShortLabels] ??
+						{predicateTypeShortLabels[edgeType as keyof typeof predicateTypeShortLabels] ??
 							"unknown edge type"}{" "}
 						relations!
 					</span>,

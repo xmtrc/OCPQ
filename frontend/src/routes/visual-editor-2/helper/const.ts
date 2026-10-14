@@ -25,6 +25,34 @@ import {
 import OrAnySatisfiedEdge from "@/routes/visual-editor-2/helper/edge/OrAnySatisfiedEdge.tsx";
 import ObjectAttributeRangeEdge from "@/routes/visual-editor-2/helper/edge/ObjectAttributeRangeEdge.tsx";
 
+export const predicateTypeLabels = {
+	[PredicateType.EventToObject]: "Event to Object",
+	[PredicateType.ObjectToObject]: "Object to Object",
+	[PredicateType.TimeBetweenEvents]: "Time Between Events",
+	[PredicateType.EventAttributeRange]: "Event Attribute Range",
+	[PredicateType.ObjectAttributeRange]: "Object Attribute Range",
+	[PredicateType.ChildBindingSetSize]: "Child Binding Set Size",
+	[PredicateType.ChildBindingSetEquals]: "Child Binding Set Equals",
+	[PredicateType.AllSatisfied]: "All Satisfied",
+	[PredicateType.AnySatisfied]: "Any Satisfied",
+	[PredicateType.NoneSatisfied]: "None Satisfied",
+	[PredicateType.OrAnySatisfied]: "Or Any Satisfied",
+};
+
+export const predicateTypeShortLabels = {
+	[PredicateType.EventToObject]: "E2O",
+	[PredicateType.ObjectToObject]: "O2O",
+	[PredicateType.TimeBetweenEvents]: "TBE",
+	[PredicateType.EventAttributeRange]: "EAR",
+	[PredicateType.ObjectAttributeRange]: "OAR",
+	[PredicateType.ChildBindingSetSize]: "CBS",
+	[PredicateType.ChildBindingSetEquals]: "CBE",
+	[PredicateType.AllSatisfied]: "SAT",
+	[PredicateType.AnySatisfied]: "ANY SAT",
+	[PredicateType.NoneSatisfied]: "NONE SAT",
+	[PredicateType.OrAnySatisfied]: "OR ANY SAT",
+};
+
 // Nodes
 export const EVENT_NODE_TYPE = "eventNodeType";
 export const OBJECT_NODE_TYPE = "objectNodeType";
@@ -46,24 +74,6 @@ export const edgeTypes = {
 	[PredicateType.OrAnySatisfied]: OrAnySatisfiedEdge,
 };
 
-export const edgeTypeLabels = {
-	[PredicateType.EventToObject]: "Event to Object",
-	[PredicateType.ObjectToObject]: "Object to Object",
-	[PredicateType.TimeBetweenEvents]: "Time Between Events",
-	[PredicateType.ObjectAttributeRange]: "Object Attribute Range",
-	[PredicateType.ChildBindingSetEquals]: "Child Binding Set Equals",
-	[PredicateType.OrAnySatisfied]: "Or Any Satisfied",
-};
-
-export const edgeTypeShortLabels = {
-	[PredicateType.EventToObject]: "E2O",
-	[PredicateType.ObjectToObject]: "O2O",
-	[PredicateType.TimeBetweenEvents]: "TBE",
-	[PredicateType.ObjectAttributeRange]: "OAR",
-	[PredicateType.ChildBindingSetEquals]: "CBE",
-	[PredicateType.OrAnySatisfied]: "Or Any",
-};
-
 const baseNodeData = {
 	isDisabled: false,
 	isHandleOnTop: false,
@@ -71,22 +81,25 @@ const baseNodeData = {
 
 // Uses a function to create a new objectTypes/eventTypes array instead of using the same
 export const defaultNodeData = {
-	[OBJECT_NODE_TYPE]: () =>
-		({
-			...baseNodeData,
-			displayName: "ObjectNode",
-			objectTypes: [],
-		}) satisfies ObjectNodeData,
 	[EVENT_NODE_TYPE]: () =>
 		({
 			...baseNodeData,
 			displayName: "EventNode",
 			eventTypes: [],
+			eventAttributeRangePredicates: [],
 		}) satisfies EventNodeData,
+	[OBJECT_NODE_TYPE]: () =>
+		({
+			...baseNodeData,
+			displayName: "ObjectNode",
+			objectTypes: [],
+			objectAttributeRangePredicates: [],
+		}) satisfies ObjectNodeData,
 	[SUBQUERY_NODE_TYPE]: () =>
 		({
 			...baseNodeData,
 			displayName: "SubqueryNode",
+			subqueryPredicates: [],
 		}) satisfies SubqueryNodeData,
 };
 
@@ -116,7 +129,7 @@ export const defaultEdgeData = {
 			...baseEdgeData,
 			type: PredicateType.ObjectAttributeRange,
 			attribute: "",
-			objectAttributeTimeMode: { mode: TimeMode.Always },
+			objectAttributeTimeMode: { timeMode: TimeMode.Always },
 			range: { rangeType: RangeType.String, values: [] },
 		}) satisfies ObjectAttributeRangeEdgeData,
 	[PredicateType.ChildBindingSetEquals]: () =>

@@ -1,11 +1,26 @@
 import type {
+	AllSatisfiedPredicate,
+	AnySatisfiedPredicate,
 	ChildBindingSetEqualsPredicate,
+	ChildBindingSetSizePredicate,
+	EventAttributeRangePredicate,
 	EventToObjectPredicate,
+	NoneSatisfiedPredicate,
 	ObjectAttributeRangePredicate,
 	ObjectToObjectPredicate,
 	OrAnySatisfiedPredicate,
 	TimeBetweenEventsPredicate,
 } from "@/routes/visual-editor-2/helper/types.ts";
+
+export type WithId<T> = T & {
+	id: string;
+};
+
+export type SubqueryPredicate =
+	| AllSatisfiedPredicate
+	| AnySatisfiedPredicate
+	| NoneSatisfiedPredicate
+	| ChildBindingSetSizePredicate;
 
 export type NodeData = {
 	displayName?: string;
@@ -19,13 +34,17 @@ export type NodeData = {
 
 export type EventNodeData = NodeData & {
 	eventTypes: string[];
+	eventAttributeRangePredicates: WithId<EventAttributeRangePredicate>[];
 };
 
 export type ObjectNodeData = NodeData & {
 	objectTypes: string[];
+	objectAttributeRangePredicates: WithId<ObjectAttributeRangePredicate>[];
 };
 
-export type SubqueryNodeData = NodeData;
+export type SubqueryNodeData = NodeData & {
+	subqueryPredicates: WithId<SubqueryPredicate>[];
+};
 
 export type NodeDataTypes = EventNodeData | ObjectNodeData | SubqueryNodeData;
 
