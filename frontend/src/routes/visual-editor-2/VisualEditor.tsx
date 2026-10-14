@@ -309,10 +309,7 @@ export default function VisualEditor(props: VisualEditorProps) {
 						predicateType &&
 						instance.updateEdge(edgeId, {
 							type: predicateType,
-							data: {
-								...defaultEdgeData[predicateType](),
-								type: predicateType,
-							},
+							data: defaultEdgeData[predicateType](),
 							markerEnd: {
 								type: MarkerType.ArrowClosed,
 								width: 15,

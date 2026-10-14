@@ -1,21 +1,29 @@
 import EventNode from "./node/EventNode.tsx";
 import ObjectNode from "./node/ObjectNode.tsx";
 import SubqueryNode from "./node/SubqueryNode.tsx";
-import PlaceholderEdge from "./edge/PlaceholderEdge.tsx";
 import EventToObjectEdge from "./edge/EventToObjectEdge.tsx";
 import ObjectToObjectEdge from "./edge/ObjectToObjectEdge.tsx";
 import TimeBetweenEventsEdge from "./edge/TimeBetweenEventsEdge.tsx";
 import ChildBindingSetEqualsEdge from "./edge/ChildBindingSetEqualsEdge.tsx";
 import type {
-	ChildBindingSetEqualsData,
+	ChildBindingSetEqualsEdgeData,
 	EventNodeData,
 	EventToObjectEdgeData,
+	ObjectAttributeRangeEdgeData,
 	ObjectNodeData,
 	ObjectToObjectEdgeData,
+	OrAnySatisfiedEdgeData,
 	SubqueryNodeData,
 	TimeBetweenEventsEdgeData,
 } from "@/routes/visual-editor-2/helper/flowTypes.ts";
-import { PredicateMode, PredicateType } from "@/routes/visual-editor-2/helper/types.ts";
+import {
+	PredicateMode,
+	PredicateType,
+	RangeType,
+	TimeMode,
+} from "@/routes/visual-editor-2/helper/types.ts";
+import OrAnySatisfiedEdge from "@/routes/visual-editor-2/helper/edge/OrAnySatisfiedEdge.tsx";
+import ObjectAttributeRangeEdge from "@/routes/visual-editor-2/helper/edge/ObjectAttributeRangeEdge.tsx";
 
 // Nodes
 export const EVENT_NODE_TYPE = "eventNodeType";
@@ -33,17 +41,15 @@ export const edgeTypes = {
 	[PredicateType.EventToObject]: EventToObjectEdge,
 	[PredicateType.ObjectToObject]: ObjectToObjectEdge,
 	[PredicateType.TimeBetweenEvents]: TimeBetweenEventsEdge,
-	[PredicateType.EventAttributeRange]: PlaceholderEdge,
-	[PredicateType.ObjectAttributeRange]: PlaceholderEdge,
+	[PredicateType.ObjectAttributeRange]: ObjectAttributeRangeEdge,
 	[PredicateType.ChildBindingSetEquals]: ChildBindingSetEqualsEdge,
-	[PredicateType.OrAnySatisfied]: PlaceholderEdge,
+	[PredicateType.OrAnySatisfied]: OrAnySatisfiedEdge,
 };
 
 export const edgeTypeLabels = {
 	[PredicateType.EventToObject]: "Event to Object",
 	[PredicateType.ObjectToObject]: "Object to Object",
 	[PredicateType.TimeBetweenEvents]: "Time Between Events",
-	[PredicateType.EventAttributeRange]: "Event Attribute Range",
 	[PredicateType.ObjectAttributeRange]: "Object Attribute Range",
 	[PredicateType.ChildBindingSetEquals]: "Child Binding Set Equals",
 	[PredicateType.OrAnySatisfied]: "Or Any Satisfied",
@@ -53,11 +59,9 @@ export const edgeTypeShortLabels = {
 	[PredicateType.EventToObject]: "E2O",
 	[PredicateType.ObjectToObject]: "O2O",
 	[PredicateType.TimeBetweenEvents]: "TBE",
-	[PredicateType.EventAttributeRange]: "",
-	[PredicateType.ObjectAttributeRange]: "",
+	[PredicateType.ObjectAttributeRange]: "OAR",
 	[PredicateType.ChildBindingSetEquals]: "CBE",
-	[PredicateType.OrAnySatisfied]: "",
-	undefined: "",
+	[PredicateType.OrAnySatisfied]: "Or Any",
 };
 
 const baseNodeData = {
@@ -107,19 +111,24 @@ export const defaultEdgeData = {
 			...baseEdgeData,
 			type: PredicateType.TimeBetweenEvents,
 		}) satisfies TimeBetweenEventsEdgeData,
-	[PredicateType.EventAttributeRange]: () => ({
-		...baseEdgeData,
-	}),
-	[PredicateType.ObjectAttributeRange]: () => ({
-		...baseEdgeData,
-	}),
+	[PredicateType.ObjectAttributeRange]: () =>
+		({
+			...baseEdgeData,
+			type: PredicateType.ObjectAttributeRange,
+			attribute: "",
+			objectAttributeTimeMode: { mode: TimeMode.Always },
+			range: { rangeType: RangeType.String, values: [] },
+		}) satisfies ObjectAttributeRangeEdgeData,
 	[PredicateType.ChildBindingSetEquals]: () =>
 		({
 			...baseEdgeData,
 			type: PredicateType.ChildBindingSetEquals,
 			projected: false,
-		}) satisfies ChildBindingSetEqualsData,
-	[PredicateType.OrAnySatisfied]: () => ({
-		...baseEdgeData,
-	}),
+		}) satisfies ChildBindingSetEqualsEdgeData,
+	[PredicateType.OrAnySatisfied]: () =>
+		({
+			...baseEdgeData,
+			type: PredicateType.OrAnySatisfied,
+			mode: PredicateMode.Constraint,
+		}) satisfies OrAnySatisfiedEdgeData,
 };

@@ -1,8 +1,9 @@
 import type {
 	ChildBindingSetEqualsPredicate,
 	EventToObjectPredicate,
+	ObjectAttributeRangePredicate,
 	ObjectToObjectPredicate,
-	PlaceHolderPredicate,
+	OrAnySatisfiedPredicate,
 	TimeBetweenEventsPredicate,
 } from "@/routes/visual-editor-2/helper/types.ts";
 
@@ -39,13 +40,16 @@ export type ObjectToObjectEdgeData = EdgeData & ObjectToObjectPredicate;
 
 export type TimeBetweenEventsEdgeData = EdgeData & TimeBetweenEventsPredicate;
 
-export type ChildBindingSetEqualsData = EdgeData & ChildBindingSetEqualsPredicate;
+export type ObjectAttributeRangeEdgeData = EdgeData & ObjectAttributeRangePredicate;
 
-export type PlaceHolderEdgeData = EdgeData & PlaceHolderPredicate;
+export type ChildBindingSetEqualsEdgeData = EdgeData & ChildBindingSetEqualsPredicate;
+
+export type OrAnySatisfiedEdgeData = EdgeData & OrAnySatisfiedPredicate;
 
 export type EdgeDataTypes =
 	| EventToObjectEdgeData
 	| ObjectToObjectEdgeData
 	| TimeBetweenEventsEdgeData
-	| ChildBindingSetEqualsData
-	| PlaceHolderEdgeData;
+	| ObjectAttributeRangeEdgeData
+	| ChildBindingSetEqualsEdgeData
+	| OrAnySatisfiedEdgeData;

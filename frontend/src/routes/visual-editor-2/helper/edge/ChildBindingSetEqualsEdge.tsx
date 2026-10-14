@@ -6,14 +6,14 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { EVENT_NODE_TYPE, OBJECT_NODE_TYPE } from "@/routes/visual-editor-2/helper/const.ts";
 import { Combobox } from "@/components/ui/combobox.tsx";
 import type {
-	ChildBindingSetEqualsData,
+	ChildBindingSetEqualsEdgeData,
 	EdgeDataTypes,
 	NodeDataTypes,
 } from "@/routes/visual-editor-2/helper/flowTypes.ts";
 import PredicateEdge from "@/routes/visual-editor-2/helper/edge/common/PredicateEdge.tsx";
 
 export default function ChildBindingSetEqualsEdge(
-	props: EdgeProps<Edge<ChildBindingSetEqualsData>>,
+	props: EdgeProps<Edge<ChildBindingSetEqualsEdgeData>>,
 ) {
 	const { id, data } = props;
 	const { onEdgeDataChange } = useContext(VisualEditorContext);

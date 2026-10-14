@@ -112,5 +112,3 @@ export type NoneSatisfiedPredicate = Predicate & {
 	type: PredicateType.NoneSatisfied;
 	mode: PredicateMode.Constraint;
 };
-
-export type PlaceHolderPredicate = Predicate & {};
