@@ -38,10 +38,10 @@ import DeleteDialog from "@/routes/visual-editor-2/helper/common/DeleteDialog.ts
 import type { EdgeDataTypes } from "@/routes/visual-editor-2/helper/flowTypes.ts";
 import type { VariantProps } from "class-variance-authority";
 import PredicateLabel, {
-	type PredicateLabelVariants,
+	type predicateLabelVariants,
 } from "@/routes/visual-editor-2/helper/common/PredicateLabel.tsx";
 
-interface PredicateEdgeProps extends VariantProps<typeof PredicateLabelVariants> {
+interface PredicateEdgeProps extends VariantProps<typeof predicateLabelVariants> {
 	type: keyof typeof edgeTypes;
 	label?: string;
 	edgeProps: EdgeProps<Edge<EdgeDataTypes>>;
@@ -156,7 +156,7 @@ export default function PredicateEdge({
 							</AlertDialogDescription>
 							<div className="text-sm text-muted-foreground">
 								<ToggleGroup
-									className="justify-start my-3"
+									className="justify-start mb-3 mt-1"
 									type="single"
 									value={mode}
 									onValueChange={(v) => v && setMode(v as PredicateMode)}

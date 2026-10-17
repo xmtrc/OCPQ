@@ -169,7 +169,7 @@ function NumberRangeInput({
 	);
 }
 
-function StringListInput({
+export function StringListInput({
 	value,
 	onChange,
 }: {

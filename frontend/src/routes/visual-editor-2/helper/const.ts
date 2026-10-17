@@ -8,6 +8,7 @@ import ChildBindingSetEqualsEdge from "./edge/ChildBindingSetEqualsEdge.tsx";
 import type {
 	ChildBindingSetEqualsEdgeData,
 	EventNodeData,
+	EventNodePredicate,
 	EventToObjectEdgeData,
 	ObjectAttributeRangeEdgeData,
 	ObjectNodeData,
@@ -17,6 +18,7 @@ import type {
 	TimeBetweenEventsEdgeData,
 } from "@/routes/visual-editor-2/helper/flowTypes.ts";
 import {
+	type AttributeRange,
 	PredicateMode,
 	PredicateType,
 	RangeType,
@@ -24,6 +26,7 @@ import {
 } from "@/routes/visual-editor-2/helper/types.ts";
 import OrAnySatisfiedEdge from "@/routes/visual-editor-2/helper/edge/OrAnySatisfiedEdge.tsx";
 import ObjectAttributeRangeEdge from "@/routes/visual-editor-2/helper/edge/ObjectAttributeRangeEdge.tsx";
+import { v4 } from "uuid";
 
 export const predicateTypeLabels = {
 	[PredicateType.EventToObject]: "Event to Object",
@@ -86,20 +89,20 @@ export const defaultNodeData = {
 			...baseNodeData,
 			displayName: "EventNode",
 			eventTypes: [],
-			eventAttributeRangePredicates: [],
+			predicates: [],
 		}) satisfies EventNodeData,
 	[OBJECT_NODE_TYPE]: () =>
 		({
 			...baseNodeData,
 			displayName: "ObjectNode",
 			objectTypes: [],
-			objectAttributeRangePredicates: [],
+			predicates: [],
 		}) satisfies ObjectNodeData,
 	[SUBQUERY_NODE_TYPE]: () =>
 		({
 			...baseNodeData,
 			displayName: "SubqueryNode",
-			subqueryPredicates: [],
+			predicates: [],
 		}) satisfies SubqueryNodeData,
 };
 
@@ -144,4 +147,47 @@ export const defaultEdgeData = {
 			type: PredicateType.OrAnySatisfied,
 			mode: PredicateMode.Constraint,
 		}) satisfies OrAnySatisfiedEdgeData,
+};
+
+export const defaultNodePredicateData = {
+	[PredicateType.EventAttributeRange]: () =>
+		({
+			id: v4(),
+			type: PredicateType.EventAttributeRange,
+			mode: PredicateMode.Filter,
+			attribute: "",
+			range: { rangeType: RangeType.String, values: [] },
+			isInitialized: false,
+		}) satisfies EventNodePredicate,
+};
+
+export const defaultAttributeRangeData = {
+	[RangeType.Integer]: () =>
+		({
+			rangeType: RangeType.Integer,
+			min: null,
+			max: null,
+		}) satisfies AttributeRange,
+	[RangeType.Float]: () =>
+		({
+			rangeType: RangeType.Float,
+			min: null,
+			max: null,
+		}) satisfies AttributeRange,
+	[RangeType.Boolean]: () =>
+		({
+			rangeType: RangeType.Boolean,
+			value: true,
+		}) satisfies AttributeRange,
+	[RangeType.String]: () =>
+		({
+			rangeType: RangeType.String,
+			values: [],
+		}) satisfies AttributeRange,
+	[RangeType.Time]: () =>
+		({
+			rangeType: RangeType.Time,
+			from: null,
+			to: null,
+		}) satisfies AttributeRange,
 };

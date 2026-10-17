@@ -12,15 +12,22 @@ import type {
 	TimeBetweenEventsPredicate,
 } from "@/routes/visual-editor-2/helper/types.ts";
 
-export type WithId<T> = T & {
+export type NodePredicate = {
 	id: string;
+	isInitialized: boolean;
 };
 
-export type SubqueryPredicate =
-	| AllSatisfiedPredicate
-	| AnySatisfiedPredicate
-	| NoneSatisfiedPredicate
-	| ChildBindingSetSizePredicate;
+export type EventNodePredicate = NodePredicate & EventAttributeRangePredicate;
+
+export type ObjectNodePredicate = NodePredicate & ObjectAttributeRangePredicate;
+
+export type SubqueryNodePredicate = NodePredicate &
+	(
+		| AllSatisfiedPredicate
+		| AnySatisfiedPredicate
+		| NoneSatisfiedPredicate
+		| ChildBindingSetSizePredicate
+	);
 
 export type NodeData = {
 	displayName?: string;
@@ -34,16 +41,16 @@ export type NodeData = {
 
 export type EventNodeData = NodeData & {
 	eventTypes: string[];
-	eventAttributeRangePredicates: WithId<EventAttributeRangePredicate>[];
+	predicates: EventNodePredicate[];
 };
 
 export type ObjectNodeData = NodeData & {
 	objectTypes: string[];
-	objectAttributeRangePredicates: WithId<ObjectAttributeRangePredicate>[];
+	predicates: ObjectNodePredicate[];
 };
 
 export type SubqueryNodeData = NodeData & {
-	subqueryPredicates: WithId<SubqueryPredicate>[];
+	predicates: SubqueryNodePredicate[];
 };
 
 export type NodeDataTypes = EventNodeData | ObjectNodeData | SubqueryNodeData;

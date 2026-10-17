@@ -32,11 +32,11 @@ export enum RangeType {
 }
 
 export type AttributeRange =
-	| { rangeType: RangeType.Integer; min?: number; max?: number }
-	| { rangeType: RangeType.Float; min?: number; max?: number }
+	| { rangeType: RangeType.Integer; min: number | null; max: number | null }
+	| { rangeType: RangeType.Float; min: number | null; max: number | null }
 	| { rangeType: RangeType.Boolean; value: boolean }
 	| { rangeType: RangeType.String; values: string[] }
-	| { rangeType: RangeType.Time; min?: number; max?: number };
+	| { rangeType: RangeType.Time; from: string | null; to: string | null };
 
 export enum TimeMode {
 	Always = "Always",

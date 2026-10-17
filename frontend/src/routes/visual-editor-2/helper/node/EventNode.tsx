@@ -1,5 +1,8 @@
-import type { NodeProps, Node } from "@xyflow/react";
-import type { EventNodeData } from "@/routes/visual-editor-2/helper/flowTypes.ts";
+import type { Node, NodeProps } from "@xyflow/react";
+import type {
+	EventNodeData,
+	EventNodePredicate,
+} from "@/routes/visual-editor-2/helper/flowTypes.ts";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -24,19 +27,49 @@ import { ActivityChooser } from "@r4pm/components";
 import { R4pmIsland } from "@/components/r4pm/R4pmIsland.tsx";
 import { useOcelStats } from "@/hooks";
 import RenameNodeDialog from "@/routes/visual-editor-2/helper/node/common/RenameNodeDialog.tsx";
-import { defaultNodeData, EVENT_NODE_TYPE } from "@/routes/visual-editor-2/helper/const.ts";
+import {
+	defaultNodeData,
+	defaultNodePredicateData,
+	EVENT_NODE_TYPE,
+	predicateTypeShortLabels,
+} from "@/routes/visual-editor-2/helper/const.ts";
 import DeleteDialog from "@/routes/visual-editor-2/helper/common/DeleteDialog.tsx";
 import NodeBox from "@/routes/visual-editor-2/helper/node/common/NodeBox.tsx";
 import NodeEditButton from "@/routes/visual-editor-2/helper/node/common/NodeEditButton.tsx";
+import { PredicateType } from "@/routes/visual-editor-2/helper/types.ts";
+import AttributeRangeDialog from "@/routes/visual-editor-2/helper/node/common/AttributeRangeDialog.tsx";
+import type { OCELTypeAttribute } from "@/types/ocel.ts";
+import PredicateLabel from "@/routes/visual-editor-2/helper/common/PredicateLabel.tsx";
 
 export default function EventNode({ data, id, selected }: NodeProps<Node<EventNodeData>>) {
 	const { onNodeDataChange, ocelInfo } = useContext(VisualEditorContext);
 	const ocelStats = useOcelStats();
 
-	const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
-	const [editAlertOpen, setEditAlertOpen] = useState(false);
-	const [renameAlertOpen, setRenameAlertOpen] = useState(false);
+	type OpenDialog = "edit" | "rename" | "delete" | "earEdit" | "earDelete" | undefined;
+	const [dialog, setDialog] = useState<OpenDialog>(undefined);
+
 	const [editTypes, setEditTypes] = useState<string[]>(data.eventTypes);
+	const [earDraft, setEarDraft] = useState<EventNodePredicate>(
+		defaultNodePredicateData[PredicateType.EventAttributeRange](),
+	);
+
+	function getOcelEventAttributes() {
+		const ocelAttributes: OCELTypeAttribute[] = [
+			{ name: "ocel:id", type: "string" },
+			{ name: "ocel:time", type: "time" },
+		];
+		for (const eventType of data.eventTypes) {
+			const ocelType = ocelInfo?.event_types.find(
+				(ocelEventType) => ocelEventType.name === eventType,
+			);
+			if (!ocelType) continue;
+			for (const ocelTypeAttribute of ocelType.attributes) {
+				!ocelAttributes.find((ocelAttribute) => ocelAttribute.name === ocelTypeAttribute.name) &&
+					ocelAttributes.push(ocelTypeAttribute);
+			}
+		}
+		return ocelAttributes;
+	}
 
 	return (
 		<NodeBox
@@ -48,6 +81,58 @@ export default function EventNode({ data, id, selected }: NodeProps<Node<EventNo
 			isDisabled={data.isDisabled}
 			className="w-52"
 		>
+			<div className="flex flex-col-reverse items-end absolute w-full bottom-full pb-0.5 nodrag -z-2">
+				{data.predicates.map((predicate) => {
+					return (
+						<ContextMenu key={predicate.id}>
+							<ContextMenuTrigger>
+								<button
+									onClick={() => {
+										setTimeout(() => {
+											setEarDraft(predicate);
+											setDialog("earEdit");
+										}, 100);
+									}}
+								>
+									<PredicateLabel
+										type={predicate.type}
+										mode={predicate.mode}
+										color={predicate.color}
+										label={predicate.attribute}
+										flavor="ear"
+									/>
+								</button>
+							</ContextMenuTrigger>
+							<ContextMenuContent>
+								<ContextMenuItem
+									onSelect={() => {
+										setTimeout(() => {
+											setEarDraft(predicate);
+											setDialog("earEdit");
+										}, 100);
+									}}
+								>
+									Edit {predicateTypeShortLabels[predicate.type]} {predicate.mode}
+								</ContextMenuItem>
+								<div className="border-t my-1 mx-2"></div>
+								<ContextMenuItem>Cancel</ContextMenuItem>
+								<ContextMenuItem
+									className="font-semibold text-red-400 focus:text-red-500"
+									onSelect={() => {
+										setTimeout(() => {
+											setEarDraft(predicate);
+											setDialog("earDelete");
+										}, 100);
+									}}
+								>
+									<LuTrash className="mr-1" /> Delete {predicateTypeShortLabels[predicate.type]}{" "}
+									{predicate.mode}
+								</ContextMenuItem>
+							</ContextMenuContent>
+						</ContextMenu>
+					);
+				})}
+			</div>
 			<ContextMenu>
 				<ContextMenuTrigger
 					onContextMenu={(ev) => {
@@ -77,7 +162,7 @@ export default function EventNode({ data, id, selected }: NodeProps<Node<EventNo
 						<NodeEditButton
 							flavor="event"
 							isDisabled={data.isDisabled}
-							onClick={() => setEditAlertOpen(true)}
+							onClick={() => setDialog("edit")}
 						/>
 					</div>
 				</ContextMenuTrigger>
@@ -86,13 +171,22 @@ export default function EventNode({ data, id, selected }: NodeProps<Node<EventNo
 						<div className="text-gray-300 text-xs font-semibold px-2 pt-1">
 							Filters and Constraints
 						</div>
-						<ContextMenuItem>Add Filter or Constraint</ContextMenuItem>
+						<ContextMenuItem
+							onSelect={() => {
+								setTimeout(() => {
+									setEarDraft(defaultNodePredicateData[PredicateType.EventAttributeRange]());
+									setDialog("earEdit");
+								}, 100);
+							}}
+						>
+							Add EAR Predicate
+						</ContextMenuItem>
 						<div className="border-t my-1 mx-2"></div>
 						<div className="text-gray-300 text-xs font-semibold px-2 pt-1">Edit Node</div>
 						<ContextMenuItem
 							onSelect={() => {
 								setTimeout(() => {
-									setRenameAlertOpen(true);
+									setDialog("rename");
 								}, 100);
 							}}
 						>
@@ -101,7 +195,7 @@ export default function EventNode({ data, id, selected }: NodeProps<Node<EventNo
 						<ContextMenuItem
 							onSelect={() => {
 								setTimeout(() => {
-									setEditAlertOpen(true);
+									setDialog("edit");
 								}, 100);
 							}}
 						>
@@ -112,7 +206,7 @@ export default function EventNode({ data, id, selected }: NodeProps<Node<EventNo
 						<ContextMenuItem
 							onSelect={() => {
 								setTimeout(() => {
-									setDeleteAlertOpen(true);
+									setDialog("delete");
 								}, 100);
 							}}
 							className="font-semibold text-red-400 focus:text-red-500"
@@ -123,17 +217,66 @@ export default function EventNode({ data, id, selected }: NodeProps<Node<EventNo
 				</ContextMenuPortal>
 			</ContextMenu>
 			<RenameNodeDialog
-				open={renameAlertOpen}
+				open={dialog === "rename"}
 				initialName={data.displayName ?? ""}
 				defaultName={defaultNodeData[EVENT_NODE_TYPE]().displayName}
-				onOpenChange={setRenameAlertOpen}
+				onOpenChange={(open) => !open && setDialog(undefined)}
 				onRename={(newName) => {
 					onNodeDataChange(id, {
 						displayName: newName,
 					});
 				}}
 			/>
-			<AlertDialog open={editAlertOpen} onOpenChange={setEditAlertOpen}>
+			<AttributeRangeDialog
+				open={dialog === "earEdit"}
+				onOpenChange={(open) => !open && setDialog(undefined)}
+				onSave={() => {
+					if (!earDraft.isInitialized) {
+						const saveEar = {
+							...earDraft,
+							isInitialized: true,
+						} satisfies EventNodePredicate;
+						onNodeDataChange(id, {
+							predicates: [...data.predicates, saveEar],
+						});
+					} else {
+						onNodeDataChange(id, {
+							predicates: data.predicates.map((predicate) => {
+								if (predicate.id === earDraft.id) {
+									return earDraft;
+								} else {
+									return predicate;
+								}
+							}),
+						});
+					}
+				}}
+				predicateType={PredicateType.EventAttributeRange}
+				predicateMode={earDraft.mode}
+				setPredicateMode={(predicateMode) =>
+					setEarDraft((oldDraft) => ({
+						...oldDraft,
+						mode: predicateMode,
+					}))
+				}
+				isInitialized={earDraft.isInitialized}
+				ocelAttributes={getOcelEventAttributes()}
+				attribute={earDraft.attribute}
+				setAttribute={(attribute) =>
+					setEarDraft((oldDraft) => ({
+						...oldDraft,
+						attribute: attribute,
+					}))
+				}
+				attributeRange={earDraft.range}
+				setAttributeRange={(attributeRange) =>
+					setEarDraft((oldDraft) => ({
+						...oldDraft,
+						range: attributeRange,
+					}))
+				}
+			/>
+			<AlertDialog open={dialog === "edit"} onOpenChange={(open) => !open && setDialog(undefined)}>
 				<AlertDialogContent
 					onContextMenuCapture={(ev) => {
 						ev.stopPropagation();
@@ -174,7 +317,7 @@ export default function EventNode({ data, id, selected }: NodeProps<Node<EventNo
 						<AlertDialogCancel
 							onClick={() => {
 								setEditTypes(data.eventTypes);
-								setEditAlertOpen(false);
+								setDialog(undefined);
 							}}
 						>
 							Cancel
@@ -184,7 +327,7 @@ export default function EventNode({ data, id, selected }: NodeProps<Node<EventNo
 								onNodeDataChange(id, {
 									eventTypes: editTypes,
 								});
-								setEditAlertOpen(false);
+								setDialog(undefined);
 							}}
 						>
 							{data.eventTypes.length === 0 ? "Add" : "Edit"}
@@ -193,10 +336,22 @@ export default function EventNode({ data, id, selected }: NodeProps<Node<EventNo
 				</AlertDialogContent>
 			</AlertDialog>
 			<DeleteDialog
-				open={deleteAlertOpen}
+				open={dialog === "delete"}
 				toBeDeleted={`node "${data.displayName || defaultNodeData[EVENT_NODE_TYPE]().displayName}"`}
-				onOpenChange={setDeleteAlertOpen}
-				onDelete={() => onNodeDataChange(id, undefined)}
+				onOpenChange={(open) => !open && setDialog(undefined)}
+				onDelete={() => {
+					onNodeDataChange(id, undefined);
+				}}
+			/>
+			<DeleteDialog
+				open={dialog === "earDelete"}
+				toBeDeleted={`${predicateTypeShortLabels[earDraft.type]} ${earDraft.mode}`}
+				onOpenChange={(open) => !open && setDialog(undefined)}
+				onDelete={() => {
+					onNodeDataChange(id, {
+						predicates: data.predicates.filter((predicate) => predicate.id !== earDraft.id),
+					});
+				}}
 			/>
 		</NodeBox>
 	);

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils.ts";
 import { predicateTypeShortLabels } from "@/routes/visual-editor-2/helper/const.ts";
 import type { PredicateMode, PredicateType } from "@/routes/visual-editor-2/helper/types.ts";
 
-export const PredicateLabelVariants = cva(
+export const predicateLabelVariants = cva(
 	"flex items-center font-semibold text-sm w-fit min-w-6 h-6 px-2 rounded-full transition duration-200",
 	{
 		variants: {
@@ -24,7 +24,7 @@ export const PredicateLabelVariants = cva(
 	},
 );
 
-interface PredicateLabelProps extends VariantProps<typeof PredicateLabelVariants> {
+interface PredicateLabelProps extends VariantProps<typeof predicateLabelVariants> {
 	type: PredicateType;
 	mode?: PredicateMode;
 	color?: string;
@@ -33,7 +33,7 @@ interface PredicateLabelProps extends VariantProps<typeof PredicateLabelVariants
 
 export default function PredicateLabel({ type, mode, flavor, color, label }: PredicateLabelProps) {
 	return (
-		<div className={cn(PredicateLabelVariants({ flavor }), color)}>
+		<div className={cn(predicateLabelVariants({ flavor }), color)}>
 			{predicateTypeShortLabels[type]} {mode}
 			{label && `: ${label}`}
 		</div>
