@@ -1,5 +1,8 @@
 import type { NodeProps, Node } from "@xyflow/react";
-import type { ObjectNodeData } from "@/routes/visual-editor-2/helper/flowTypes.ts";
+import type {
+	ObjectNodeData,
+	ObjectNodePredicate,
+} from "@/routes/visual-editor-2/helper/flowTypes.ts";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -24,19 +27,47 @@ import { ObjectTypeChooser } from "@r4pm/components";
 import { useOcelStats } from "@/hooks";
 import { R4pmIsland } from "@/components/r4pm/R4pmIsland.tsx";
 import RenameNodeDialog from "@/routes/visual-editor-2/helper/node/common/RenameNodeDialog.tsx";
-import { defaultNodeData, OBJECT_NODE_TYPE } from "@/routes/visual-editor-2/helper/const.ts";
+import {
+	defaultNodeData,
+	defaultNodePredicateData,
+	OBJECT_NODE_TYPE,
+	predicateTypeShortLabels,
+} from "@/routes/visual-editor-2/helper/const.ts";
 import DeleteDialog from "@/routes/visual-editor-2/helper/common/DeleteDialog.tsx";
 import NodeBox from "@/routes/visual-editor-2/helper/node/common/NodeBox.tsx";
 import NodeEditButton from "@/routes/visual-editor-2/helper/node/common/NodeEditButton.tsx";
+import { PredicateType } from "@/routes/visual-editor-2/helper/types.ts";
+import AttributeRangeDialog from "@/routes/visual-editor-2/helper/node/common/AttributeRangeDialog.tsx";
+import type { OCELTypeAttribute } from "@/types/ocel.ts";
+import PredicateLabel from "@/routes/visual-editor-2/helper/common/PredicateLabel.tsx";
 
 export default function ObjectNode({ data, id, selected }: NodeProps<Node<ObjectNodeData>>) {
 	const { onNodeDataChange, ocelInfo } = useContext(VisualEditorContext);
 	const ocelStats = useOcelStats();
 
-	const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
-	const [editAlertOpen, setEditAlertOpen] = useState(false);
-	const [renameAlertOpen, setRenameAlertOpen] = useState(false);
+	type OpenDialog = "edit" | "rename" | "delete" | "oarEdit" | "oarDelete" | undefined;
+	const [dialog, setDialog] = useState<OpenDialog>(undefined);
+
 	const [editTypes, setEditTypes] = useState<string[]>(data.objectTypes);
+	const [oarDraft, setOarDraft] = useState<ObjectNodePredicate>(
+		defaultNodePredicateData[PredicateType.ObjectAttributeRange](),
+	);
+
+	// TODO: Refactor, looks ugly
+	function getOcelEventAttributes() {
+		const ocelAttributes: OCELTypeAttribute[] = [{ name: "ocel:id", type: "string" }];
+		for (const eventType of data.objectTypes) {
+			const ocelType = ocelInfo?.object_types.find(
+				(ocelObjectType) => ocelObjectType.name === eventType,
+			);
+			if (!ocelType) continue;
+			for (const ocelTypeAttribute of ocelType.attributes) {
+				!ocelAttributes.find((ocelAttribute) => ocelAttribute.name === ocelTypeAttribute.name) &&
+					ocelAttributes.push(ocelTypeAttribute);
+			}
+		}
+		return ocelAttributes;
+	}
 
 	return (
 		<NodeBox
@@ -48,6 +79,58 @@ export default function ObjectNode({ data, id, selected }: NodeProps<Node<Object
 			isDisabled={data.isDisabled}
 			className="w-52"
 		>
+			<div className="flex flex-col-reverse items-end absolute w-full bottom-full pb-0.5 nodrag -z-2">
+				{data.predicates.map((predicate) => {
+					return (
+						<ContextMenu key={predicate.id}>
+							<ContextMenuTrigger>
+								<button
+									onClick={() => {
+										setTimeout(() => {
+											setOarDraft(predicate);
+											setDialog("oarEdit");
+										}, 100);
+									}}
+								>
+									<PredicateLabel
+										type={predicate.type}
+										mode={predicate.mode}
+										color={predicate.color}
+										label={predicate.attribute}
+										flavor="oar"
+									/>
+								</button>
+							</ContextMenuTrigger>
+							<ContextMenuContent>
+								<ContextMenuItem
+									onSelect={() => {
+										setTimeout(() => {
+											setOarDraft(predicate);
+											setDialog("oarEdit");
+										}, 100);
+									}}
+								>
+									Edit {predicateTypeShortLabels[predicate.type]} {predicate.mode}
+								</ContextMenuItem>
+								<div className="border-t my-1 mx-2"></div>
+								<ContextMenuItem>Cancel</ContextMenuItem>
+								<ContextMenuItem
+									className="font-semibold text-red-400 focus:text-red-500"
+									onSelect={() => {
+										setTimeout(() => {
+											setOarDraft(predicate);
+											setDialog("oarDelete");
+										}, 100);
+									}}
+								>
+									<LuTrash className="mr-1" /> Delete {predicateTypeShortLabels[predicate.type]}{" "}
+									{predicate.mode}
+								</ContextMenuItem>
+							</ContextMenuContent>
+						</ContextMenu>
+					);
+				})}
+			</div>
 			<ContextMenu>
 				<ContextMenuTrigger
 					onContextMenu={(ev) => {
@@ -77,7 +160,7 @@ export default function ObjectNode({ data, id, selected }: NodeProps<Node<Object
 						<NodeEditButton
 							flavor="object"
 							isDisabled={data.isDisabled}
-							onClick={() => setEditAlertOpen(true)}
+							onClick={() => setDialog("edit")}
 						/>
 					</div>
 				</ContextMenuTrigger>
@@ -86,13 +169,22 @@ export default function ObjectNode({ data, id, selected }: NodeProps<Node<Object
 						<div className="text-gray-300 text-xs font-semibold px-2 pt-1">
 							Filters and Constraints
 						</div>
-						<ContextMenuItem>Add Filter or Constraint</ContextMenuItem>
+						<ContextMenuItem
+							onSelect={() => {
+								setTimeout(() => {
+									setOarDraft(defaultNodePredicateData[PredicateType.ObjectAttributeRange]());
+									setDialog("oarEdit");
+								}, 100);
+							}}
+						>
+							Add OAR Predicate
+						</ContextMenuItem>
 						<div className="border-t my-1 mx-2"></div>
 						<div className="text-gray-300 text-xs font-semibold px-2 pt-1">Edit Node</div>
 						<ContextMenuItem
 							onSelect={() => {
 								setTimeout(() => {
-									setRenameAlertOpen(true);
+									setDialog("rename");
 								}, 100);
 							}}
 						>
@@ -101,7 +193,7 @@ export default function ObjectNode({ data, id, selected }: NodeProps<Node<Object
 						<ContextMenuItem
 							onSelect={() => {
 								setTimeout(() => {
-									setEditAlertOpen(true);
+									setDialog("edit");
 								}, 100);
 							}}
 						>
@@ -112,7 +204,7 @@ export default function ObjectNode({ data, id, selected }: NodeProps<Node<Object
 						<ContextMenuItem
 							onSelect={() => {
 								setTimeout(() => {
-									setDeleteAlertOpen(true);
+									setDialog("delete");
 								}, 100);
 							}}
 							className="font-semibold text-red-400 focus:text-red-500"
@@ -123,17 +215,70 @@ export default function ObjectNode({ data, id, selected }: NodeProps<Node<Object
 				</ContextMenuPortal>
 			</ContextMenu>
 			<RenameNodeDialog
-				open={renameAlertOpen}
+				open={dialog === "rename"}
 				initialName={data.displayName ?? ""}
 				defaultName={defaultNodeData[OBJECT_NODE_TYPE]().displayName}
-				onOpenChange={setRenameAlertOpen}
+				onOpenChange={(open) => !open && setDialog(undefined)}
 				onRename={(newName) => {
 					onNodeDataChange(id, {
 						displayName: newName,
 					});
 				}}
 			/>
-			<AlertDialog open={editAlertOpen} onOpenChange={setEditAlertOpen}>
+			<AttributeRangeDialog
+				open={dialog === "oarEdit"}
+				onOpenChange={(open) => !open && setDialog(undefined)}
+				onSave={() => {
+					if (!oarDraft.isInitialized) {
+						const saveOar = {
+							...oarDraft,
+							isInitialized: true,
+						} satisfies ObjectNodePredicate;
+						onNodeDataChange(id, {
+							predicates: [...data.predicates, saveOar],
+						});
+					} else {
+						onNodeDataChange(id, {
+							predicates: data.predicates.map((predicate) => {
+								if (predicate.id === oarDraft.id) {
+									return oarDraft;
+								} else {
+									return predicate;
+								}
+							}),
+						});
+					}
+				}}
+				predicateType={PredicateType.ObjectAttributeRange}
+				predicateMode={oarDraft.mode}
+				setPredicateMode={(predicateMode) =>
+					setOarDraft((oldDraft) => ({
+						...oldDraft,
+						mode: predicateMode,
+					}))
+				}
+				isInitialized={oarDraft.isInitialized}
+				ocelAttributes={getOcelEventAttributes()}
+				attribute={oarDraft.attribute}
+				setAttribute={(attribute) =>
+					setOarDraft((oldDraft) => ({
+						...oldDraft,
+						attribute: attribute,
+					}))
+				}
+				timeMode={oarDraft.objectAttributeTimeMode}
+				setTimeMode={(timeMode) =>
+					setOarDraft((oldDraft) => ({ ...oldDraft, objectAttributeTimeMode: timeMode }))
+				}
+				attributeRange={oarDraft.range}
+				setAttributeRange={(attributeRange) =>
+					setOarDraft((oldDraft) => ({
+						...oldDraft,
+						range: attributeRange,
+					}))
+				}
+			/>
+			<AlertDialog open={dialog === "edit"} onOpenChange={(open) => !open && setDialog(undefined)}>
 				<AlertDialogContent
 					onContextMenuCapture={(ev) => {
 						ev.stopPropagation();
@@ -174,7 +319,7 @@ export default function ObjectNode({ data, id, selected }: NodeProps<Node<Object
 						<AlertDialogCancel
 							onClick={() => {
 								setEditTypes(data.objectTypes);
-								setEditAlertOpen(false);
+								setDialog(undefined);
 							}}
 						>
 							Cancel
@@ -184,7 +329,7 @@ export default function ObjectNode({ data, id, selected }: NodeProps<Node<Object
 								onNodeDataChange(id, {
 									objectTypes: editTypes,
 								});
-								setEditAlertOpen(false);
+								setDialog(undefined);
 							}}
 						>
 							{data.objectTypes.length === 0 ? "Add" : "Edit"}
@@ -193,10 +338,20 @@ export default function ObjectNode({ data, id, selected }: NodeProps<Node<Object
 				</AlertDialogContent>
 			</AlertDialog>
 			<DeleteDialog
-				open={deleteAlertOpen}
+				open={dialog === "delete"}
 				toBeDeleted={`node "${data.displayName || defaultNodeData[OBJECT_NODE_TYPE]().displayName}"`}
-				onOpenChange={setDeleteAlertOpen}
+				onOpenChange={(open) => !open && setDialog(undefined)}
 				onDelete={() => onNodeDataChange(id, undefined)}
+			/>
+			<DeleteDialog
+				open={dialog === "oarDelete"}
+				toBeDeleted={`${predicateTypeShortLabels[oarDraft.type]} ${oarDraft.mode}`}
+				onOpenChange={(open) => !open && setDialog(undefined)}
+				onDelete={() => {
+					onNodeDataChange(id, {
+						predicates: data.predicates.filter((predicate) => predicate.id !== oarDraft.id),
+					});
+				}}
 			/>
 		</NodeBox>
 	);

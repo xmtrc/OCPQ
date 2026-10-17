@@ -2,12 +2,15 @@ import type { OCELTypeAttribute } from "@/types/ocel.ts";
 import { Combobox } from "@/components/ui/combobox.tsx";
 import {
 	type AttributeRange,
+	type ObjectAttributeTimeMode,
 	PredicateMode,
 	type PredicateType,
 	RangeType,
+	TimeMode,
 } from "@/routes/visual-editor-2/helper/types.ts";
 import {
 	defaultAttributeRangeData,
+	EVENT_NODE_TYPE,
 	predicateTypeLabels,
 } from "@/routes/visual-editor-2/helper/const.ts";
 import {
@@ -26,6 +29,8 @@ import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { StringListInput } from "@/routes/visual-editor/helper/box/filter-helpers.tsx";
+import { type Edge, type Node, useReactFlow } from "@xyflow/react";
+import type { EdgeDataTypes, NodeDataTypes } from "@/routes/visual-editor-2/helper/flowTypes.ts";
 
 interface AttributeRangeDialogProps {
 	open: boolean;
@@ -38,12 +43,50 @@ interface AttributeRangeDialogProps {
 	ocelAttributes: OCELTypeAttribute[];
 	attribute: string;
 	setAttribute: (attribute: string) => void;
+	timeMode?: ObjectAttributeTimeMode;
+	setTimeMode?: (timeMode: ObjectAttributeTimeMode) => void;
 	attributeRange: AttributeRange;
 	setAttributeRange: (attributeRange: AttributeRange) => void;
 }
 
 function isRangeType(value: string): value is RangeType {
 	return Object.values(RangeType).includes(value as RangeType);
+}
+
+function isTimeModeType(value: string): value is TimeMode {
+	return Object.values(TimeMode).includes(value as TimeMode);
+}
+
+function disableSaveButton(
+	attribute: string,
+	attributeRange: AttributeRange,
+	timeMode?: ObjectAttributeTimeMode,
+): boolean {
+	if (attribute === "") {
+		return true;
+	}
+	switch (attributeRange.rangeType) {
+		case RangeType.Integer:
+		case RangeType.Float:
+			if (
+				attributeRange.min != null &&
+				attributeRange.max != null &&
+				attributeRange.min > attributeRange.max
+			) {
+				return true;
+			}
+			break;
+		case RangeType.String:
+			if (attributeRange.values.length === 0) {
+				return true;
+			}
+			break;
+	}
+	if (timeMode !== undefined && timeMode.mode === TimeMode.AtEvent && timeMode.eventNodeId === "") {
+		return true;
+	}
+
+	return false;
 }
 
 export default function AttributeRangeDialog({
@@ -57,9 +100,13 @@ export default function AttributeRangeDialog({
 	ocelAttributes,
 	attribute,
 	setAttribute,
+	timeMode,
+	setTimeMode,
 	attributeRange,
 	setAttributeRange,
 }: AttributeRangeDialogProps) {
+	const instance = useReactFlow<Node<NodeDataTypes>, Edge<EdgeDataTypes>>();
+
 	const ocelAttributeNames = ocelAttributes.map((ocelAttribute) => ({
 		label: ocelAttribute.name,
 		value: ocelAttribute.name,
@@ -71,6 +118,13 @@ export default function AttributeRangeDialog({
 			?.type.toLowerCase();
 		return type !== undefined && isRangeType(type) ? type : undefined;
 	}
+
+	// TODO: Only allow nodes in same box or above
+	const nodes = instance.getNodes().filter((node) => node.type === EVENT_NODE_TYPE);
+	const options = nodes.map((node) => ({
+		value: node.id,
+		label: node.data.displayName ?? node.id,
+	}));
 
 	return (
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -125,6 +179,44 @@ export default function AttributeRangeDialog({
 								name={"Type"}
 								value={attributeRange.rangeType}
 							/>
+							{timeMode !== undefined && setTimeMode !== undefined && (
+								<>
+									<Combobox
+										options={Object.values(TimeMode).map((timeMode) => ({
+											label: timeMode,
+											value: timeMode,
+										}))}
+										onChange={(newTimeMode) => {
+											isTimeModeType(newTimeMode) &&
+												setTimeMode(
+													newTimeMode === TimeMode.AtEvent
+														? {
+																mode: newTimeMode,
+																eventNodeId: "",
+															}
+														: {
+																mode: newTimeMode,
+															},
+												);
+										}}
+										name={"Time Mode"}
+										value={timeMode.mode}
+									/>
+									{timeMode.mode === TimeMode.AtEvent && (
+										<Combobox
+											options={options}
+											onChange={(newNodeId) => {
+												setTimeMode({
+													...timeMode,
+													eventNodeId: newNodeId,
+												});
+											}}
+											name={"Bind to Node"}
+											value={timeMode.eventNodeId}
+										/>
+									)}
+								</>
+							)}
 						</div>
 						{attributeRange.rangeType === RangeType.Time && (
 							<DateTimeRangeInput
@@ -219,7 +311,10 @@ export default function AttributeRangeDialog({
 				<AlertDialogFooter>
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
 					{/* TODO: Add save condition, such as max &gt;= min and non empty string filter */}
-					<AlertDialogAction disabled={attribute === ""} onClick={onSave}>
+					<AlertDialogAction
+						disabled={disableSaveButton(attribute, attributeRange, timeMode)}
+						onClick={onSave}
+					>
 						{!isInitialized ? "Add" : "Edit"}
 					</AlertDialogAction>
 				</AlertDialogFooter>

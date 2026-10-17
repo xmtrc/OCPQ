@@ -12,6 +12,7 @@ import type {
 	EventToObjectEdgeData,
 	ObjectAttributeRangeEdgeData,
 	ObjectNodeData,
+	ObjectNodePredicate,
 	ObjectToObjectEdgeData,
 	OrAnySatisfiedEdgeData,
 	SubqueryNodeData,
@@ -132,7 +133,7 @@ export const defaultEdgeData = {
 			...baseEdgeData,
 			type: PredicateType.ObjectAttributeRange,
 			attribute: "",
-			objectAttributeTimeMode: { timeMode: TimeMode.Always },
+			objectAttributeTimeMode: { mode: TimeMode.Sometime },
 			range: { rangeType: RangeType.String, values: [] },
 		}) satisfies ObjectAttributeRangeEdgeData,
 	[PredicateType.ChildBindingSetEquals]: () =>
@@ -159,6 +160,16 @@ export const defaultNodePredicateData = {
 			range: { rangeType: RangeType.String, values: [] },
 			isInitialized: false,
 		}) satisfies EventNodePredicate,
+	[PredicateType.ObjectAttributeRange]: () =>
+		({
+			id: v4(),
+			type: PredicateType.ObjectAttributeRange,
+			mode: PredicateMode.Filter,
+			attribute: "",
+			objectAttributeTimeMode: { mode: TimeMode.Sometime },
+			range: { rangeType: RangeType.String, values: [] },
+			isInitialized: false,
+		}) satisfies ObjectNodePredicate,
 };
 
 export const defaultAttributeRangeData = {
