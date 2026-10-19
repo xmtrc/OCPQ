@@ -82,8 +82,8 @@ export type ChildBindingSetSizePredicate = Predicate & {
 	type: PredicateType.ChildBindingSetSize;
 	projected: boolean;
 	projectedNodeId?: string;
-	min?: number;
-	max?: number;
+	min: number | null;
+	max: number | null;
 };
 
 export type ChildBindingSetEqualsPredicate = Predicate & {

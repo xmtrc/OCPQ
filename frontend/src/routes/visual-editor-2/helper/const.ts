@@ -16,6 +16,7 @@ import type {
 	ObjectToObjectEdgeData,
 	OrAnySatisfiedEdgeData,
 	SubqueryNodeData,
+	SubqueryNodePredicate,
 	TimeBetweenEventsEdgeData,
 } from "@/routes/visual-editor-2/helper/flowTypes.ts";
 import {
@@ -170,6 +171,38 @@ export const defaultNodePredicateData = {
 			range: { rangeType: RangeType.String, values: [] },
 			isInitialized: false,
 		}) satisfies ObjectNodePredicate,
+	[PredicateType.ChildBindingSetSize]: () =>
+		({
+			id: v4(),
+			type: PredicateType.ChildBindingSetSize,
+			mode: PredicateMode.Filter,
+			projected: false,
+			projectedNodeId: undefined,
+			min: null,
+			max: null,
+			isInitialized: false,
+		}) satisfies SubqueryNodePredicate,
+	[PredicateType.AllSatisfied]: () =>
+		({
+			id: v4(),
+			type: PredicateType.AllSatisfied,
+			mode: PredicateMode.Constraint,
+			isInitialized: false,
+		}) satisfies SubqueryNodePredicate,
+	[PredicateType.AnySatisfied]: () =>
+		({
+			id: v4(),
+			type: PredicateType.AnySatisfied,
+			mode: PredicateMode.Constraint,
+			isInitialized: false,
+		}) satisfies SubqueryNodePredicate,
+	[PredicateType.NoneSatisfied]: () =>
+		({
+			id: v4(),
+			type: PredicateType.NoneSatisfied,
+			mode: PredicateMode.Constraint,
+			isInitialized: false,
+		}) satisfies SubqueryNodePredicate,
 };
 
 export const defaultAttributeRangeData = {

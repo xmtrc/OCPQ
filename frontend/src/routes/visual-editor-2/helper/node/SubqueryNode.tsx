@@ -1,5 +1,8 @@
 import { type Node, type NodeProps, NodeResizeControl } from "@xyflow/react";
-import type { SubqueryNodeData } from "@/routes/visual-editor-2/helper/flowTypes.ts";
+import type {
+	SubqueryNodeData,
+	SubqueryNodePredicate,
+} from "@/routes/visual-editor-2/helper/flowTypes.ts";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -10,8 +13,10 @@ import {
 import { useContext, useRef, useState } from "react";
 import {
 	defaultNodeData,
+	defaultNodePredicateData,
 	EVENT_NODE_TYPE,
 	OBJECT_NODE_TYPE,
+	predicateTypeShortLabels,
 	SUBQUERY_NODE_TYPE,
 } from "@/routes/visual-editor-2/helper/const.ts";
 import { LuMoveDiagonal2, LuTrash } from "react-icons/lu";
@@ -20,13 +25,49 @@ import RenameNodeDialog from "@/routes/visual-editor-2/helper/node/common/Rename
 import DeleteDialog from "@/routes/visual-editor-2/helper/common/DeleteDialog.tsx";
 import NodeBox from "@/routes/visual-editor-2/helper/node/common/NodeBox.tsx";
 import { cn } from "@/lib/utils.ts";
+import { PredicateType } from "@/routes/visual-editor-2/helper/types.ts";
+import SubqueryNodePredicateDialog from "@/routes/visual-editor-2/helper/node/common/SubqueryNodePredicateDialog.tsx";
+import PredicateLabel from "@/routes/visual-editor-2/helper/common/PredicateLabel.tsx";
+
+function getPredicateLabel(predicate: SubqueryNodePredicate) {
+	if (predicate.type === PredicateType.ChildBindingSetSize) {
+		if (predicate.min !== null && predicate.max !== null) {
+			return `[${predicate.min} - ${predicate.max}]`;
+		} else if (predicate.min === null && predicate.max !== null) {
+			return `[max ${predicate.max}]`;
+		} else if (predicate.min !== null && predicate.max === null) {
+			return `[min ${predicate.min}]`;
+		}
+	}
+	return "";
+}
+
+function getFlavor(predicate: SubqueryNodePredicate) {
+	switch (predicate.type) {
+		case PredicateType.ChildBindingSetSize:
+			return "cbs";
+		case PredicateType.AllSatisfied:
+			return "allsat";
+		case PredicateType.AnySatisfied:
+			return "anysat";
+		case PredicateType.NoneSatisfied:
+			return "nonesat";
+		default:
+			return undefined;
+	}
+}
 
 export default function SubqueryNode({ data, id, selected }: NodeProps<Node<SubqueryNodeData>>) {
 	const { addNewNode, onNodeDataChange } = useContext(VisualEditorContext);
 
+	type OpenDialog = "rename" | "delete" | "predicateEdit" | "predicateDelete" | undefined;
+	const [dialog, setDialog] = useState<OpenDialog>(undefined);
+
+	const [predicateDraft, setPredicateDraft] = useState<SubqueryNodePredicate>(
+		defaultNodePredicateData[PredicateType.ChildBindingSetSize](),
+	);
+
 	const contextMenuPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-	const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
-	const [renameAlertOpen, setRenameAlertOpen] = useState(false);
 
 	return (
 		<NodeBox
@@ -56,6 +97,64 @@ export default function SubqueryNode({ data, id, selected }: NodeProps<Node<Subq
 			>
 				<LuMoveDiagonal2 className="text-gray-600" />
 			</NodeResizeControl>
+			<div className="flex flex-col-reverse items-end absolute w-full bottom-full pb-0.5 nodrag -z-2">
+				{data.predicates.map((predicate) => {
+					return (
+						<ContextMenu key={predicate.id}>
+							<ContextMenuTrigger>
+								<button
+									onClick={() => {
+										setTimeout(() => {
+											if (predicate.type === PredicateType.ChildBindingSetSize) {
+												setPredicateDraft(predicate);
+												setDialog("predicateEdit");
+											}
+										}, 100);
+									}}
+								>
+									<PredicateLabel
+										type={predicate.type}
+										mode={predicate.mode}
+										color={predicate.color}
+										label={getPredicateLabel(predicate)}
+										flavor={getFlavor(predicate)}
+									/>
+								</button>
+							</ContextMenuTrigger>
+							<ContextMenuContent>
+								{predicate.type === PredicateType.ChildBindingSetSize && (
+									<>
+										<ContextMenuItem
+											onSelect={() => {
+												setTimeout(() => {
+													setPredicateDraft(predicate);
+													setDialog("predicateEdit");
+												}, 100);
+											}}
+										>
+											Edit {predicateTypeShortLabels[predicate.type]} {predicate.mode}
+										</ContextMenuItem>
+										<div className="border-t my-1 mx-2"></div>
+									</>
+								)}
+								<ContextMenuItem>Cancel</ContextMenuItem>
+								<ContextMenuItem
+									className="font-semibold text-red-400 focus:text-red-500"
+									onSelect={() => {
+										setTimeout(() => {
+											setPredicateDraft(predicate);
+											setDialog("predicateDelete");
+										}, 100);
+									}}
+								>
+									<LuTrash className="mr-1" /> Delete {predicateTypeShortLabels[predicate.type]}{" "}
+									{predicate.mode}
+								</ContextMenuItem>
+							</ContextMenuContent>
+						</ContextMenu>
+					);
+				})}
+			</div>
 			<ContextMenu>
 				<ContextMenuTrigger
 					onContextMenu={(ev) => {
@@ -80,10 +179,13 @@ export default function SubqueryNode({ data, id, selected }: NodeProps<Node<Subq
 						</div>
 						<ContextMenuItem
 							onSelect={() => {
-								setTimeout(() => {}, 100);
+								setTimeout(() => {
+									setPredicateDraft(defaultNodePredicateData[PredicateType.ChildBindingSetSize]());
+									setDialog("predicateEdit");
+								}, 100);
 							}}
 						>
-							Add Filter or Constraint
+							Add Predicate
 						</ContextMenuItem>
 						<div className="border-t my-1 mx-2"></div>
 						<div className="text-gray-300 text-xs font-semibold px-2 pt-1">Add Nodes</div>
@@ -113,7 +215,7 @@ export default function SubqueryNode({ data, id, selected }: NodeProps<Node<Subq
 						<ContextMenuItem
 							onSelect={() => {
 								setTimeout(() => {
-									setRenameAlertOpen(true);
+									setDialog("rename");
 								}, 100);
 							}}
 						>
@@ -124,7 +226,7 @@ export default function SubqueryNode({ data, id, selected }: NodeProps<Node<Subq
 						<ContextMenuItem
 							onSelect={() => {
 								setTimeout(() => {
-									setDeleteAlertOpen(true);
+									setDialog("delete");
 								}, 100);
 							}}
 							className="font-semibold text-red-400 focus:text-red-500"
@@ -134,11 +236,34 @@ export default function SubqueryNode({ data, id, selected }: NodeProps<Node<Subq
 					</ContextMenuContent>
 				</ContextMenuPortal>
 			</ContextMenu>
+			<SubqueryNodePredicateDialog
+				open={dialog === "predicateEdit"}
+				onOpenChange={(open: boolean) => !open && setDialog(undefined)}
+				onSave={() => {
+					if (predicateDraft.isInitialized) {
+						onNodeDataChange(id, {
+							predicates: data.predicates.map((predicate) =>
+								predicate.id === predicateDraft.id ? predicateDraft : predicate,
+							),
+						});
+					} else {
+						const savePredicate = {
+							...predicateDraft,
+							isInitialized: true,
+						} satisfies SubqueryNodePredicate;
+						onNodeDataChange(id, {
+							predicates: [...data.predicates, savePredicate],
+						});
+					}
+				}}
+				nodePredicateDraft={predicateDraft}
+				setNodePredicateDraft={setPredicateDraft}
+			/>
 			<RenameNodeDialog
-				open={renameAlertOpen}
+				open={dialog === "rename"}
 				initialName={data.displayName ?? ""}
 				defaultName={defaultNodeData[SUBQUERY_NODE_TYPE]().displayName}
-				onOpenChange={setRenameAlertOpen}
+				onOpenChange={(open) => !open && setDialog(undefined)}
 				onRename={(newName) => {
 					onNodeDataChange(id, {
 						displayName: newName,
@@ -146,11 +271,21 @@ export default function SubqueryNode({ data, id, selected }: NodeProps<Node<Subq
 				}}
 			/>
 			<DeleteDialog
-				open={deleteAlertOpen}
+				open={dialog === "delete"}
 				toBeDeleted={`node "${data.displayName || defaultNodeData[SUBQUERY_NODE_TYPE]().displayName}"`}
 				additionalDescription="All nodes inside it will also be deleted."
-				onOpenChange={setDeleteAlertOpen}
+				onOpenChange={(open) => !open && setDialog(undefined)}
 				onDelete={() => onNodeDataChange(id, undefined)}
+			/>
+			<DeleteDialog
+				open={dialog === "predicateDelete"}
+				toBeDeleted={`${predicateTypeShortLabels[predicateDraft.type]} ${predicateDraft.mode}`}
+				onOpenChange={(open) => !open && setDialog(undefined)}
+				onDelete={() => {
+					onNodeDataChange(id, {
+						predicates: data.predicates.filter((predicate) => predicate.id !== predicateDraft.id),
+					});
+				}}
 			/>
 		</NodeBox>
 	);
