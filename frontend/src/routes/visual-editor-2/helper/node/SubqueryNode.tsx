@@ -27,35 +27,7 @@ import NodeBox from "@/routes/visual-editor-2/helper/node/common/NodeBox.tsx";
 import { cn } from "@/lib/utils.ts";
 import { PredicateType } from "@/routes/visual-editor-2/helper/types.ts";
 import SubqueryNodePredicateDialog from "@/routes/visual-editor-2/helper/node/common/SubqueryNodePredicateDialog.tsx";
-import PredicateLabel from "@/routes/visual-editor-2/helper/common/PredicateLabel.tsx";
-
-function getPredicateLabel(predicate: SubqueryNodePredicate) {
-	if (predicate.type === PredicateType.ChildBindingSetSize) {
-		if (predicate.min !== null && predicate.max !== null) {
-			return `[${predicate.min} - ${predicate.max}]`;
-		} else if (predicate.min === null && predicate.max !== null) {
-			return `[max ${predicate.max}]`;
-		} else if (predicate.min !== null && predicate.max === null) {
-			return `[min ${predicate.min}]`;
-		}
-	}
-	return "";
-}
-
-function getFlavor(predicate: SubqueryNodePredicate) {
-	switch (predicate.type) {
-		case PredicateType.ChildBindingSetSize:
-			return "cbs";
-		case PredicateType.AllSatisfied:
-			return "allsat";
-		case PredicateType.AnySatisfied:
-			return "anysat";
-		case PredicateType.NoneSatisfied:
-			return "nonesat";
-		default:
-			return undefined;
-	}
-}
+import NodePredicateLabel from "@/routes/visual-editor-2/helper/node/common/NodePredicateLabel.tsx";
 
 export default function SubqueryNode({ data, id, selected }: NodeProps<Node<SubqueryNodeData>>) {
 	const { addNewNode, onNodeDataChange } = useContext(VisualEditorContext);
@@ -98,62 +70,21 @@ export default function SubqueryNode({ data, id, selected }: NodeProps<Node<Subq
 				<LuMoveDiagonal2 className="text-gray-600" />
 			</NodeResizeControl>
 			<div className="flex flex-col-reverse items-end absolute w-full bottom-full pb-0.5 nodrag -z-2">
-				{data.predicates.map((predicate) => {
-					return (
-						<ContextMenu key={predicate.id}>
-							<ContextMenuTrigger>
-								<button
-									onClick={() => {
-										setTimeout(() => {
-											if (predicate.type === PredicateType.ChildBindingSetSize) {
-												setPredicateDraft(predicate);
-												setDialog("predicateEdit");
-											}
-										}, 100);
-									}}
-								>
-									<PredicateLabel
-										type={predicate.type}
-										mode={predicate.mode}
-										color={predicate.color}
-										label={getPredicateLabel(predicate)}
-										flavor={getFlavor(predicate)}
-									/>
-								</button>
-							</ContextMenuTrigger>
-							<ContextMenuContent>
-								{predicate.type === PredicateType.ChildBindingSetSize && (
-									<>
-										<ContextMenuItem
-											onSelect={() => {
-												setTimeout(() => {
-													setPredicateDraft(predicate);
-													setDialog("predicateEdit");
-												}, 100);
-											}}
-										>
-											Edit {predicateTypeShortLabels[predicate.type]} {predicate.mode}
-										</ContextMenuItem>
-										<div className="border-t my-1 mx-2"></div>
-									</>
-								)}
-								<ContextMenuItem>Cancel</ContextMenuItem>
-								<ContextMenuItem
-									className="font-semibold text-red-400 focus:text-red-500"
-									onSelect={() => {
-										setTimeout(() => {
-											setPredicateDraft(predicate);
-											setDialog("predicateDelete");
-										}, 100);
-									}}
-								>
-									<LuTrash className="mr-1" /> Delete {predicateTypeShortLabels[predicate.type]}{" "}
-									{predicate.mode}
-								</ContextMenuItem>
-							</ContextMenuContent>
-						</ContextMenu>
-					);
-				})}
+				{data.predicates.map((predicate) => (
+					<NodePredicateLabel
+						key={predicate.id}
+						predicate={predicate}
+						disableEdit={predicate.type !== PredicateType.ChildBindingSetSize}
+						onEdit={() => {
+							setPredicateDraft(predicate);
+							setDialog("predicateEdit");
+						}}
+						onDelete={() => {
+							setPredicateDraft(predicate);
+							setDialog("predicateDelete");
+						}}
+					/>
+				))}
 			</div>
 			<ContextMenu>
 				<ContextMenuTrigger

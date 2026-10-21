@@ -29,6 +29,8 @@ export type SubqueryNodePredicate = NodePredicate &
 		| ChildBindingSetSizePredicate
 	);
 
+export type NodePredicateTypes = EventNodePredicate | ObjectNodePredicate | SubqueryNodePredicate;
+
 export type NodeData = {
 	displayName?: string;
 	// Overrides the default color of the node

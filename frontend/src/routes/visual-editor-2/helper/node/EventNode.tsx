@@ -39,7 +39,7 @@ import NodeEditButton from "@/routes/visual-editor-2/helper/node/common/NodeEdit
 import { PredicateType } from "@/routes/visual-editor-2/helper/types.ts";
 import AttributeRangeDialog from "@/routes/visual-editor-2/helper/node/common/AttributeRangeDialog.tsx";
 import type { OCELTypeAttribute } from "@/types/ocel.ts";
-import PredicateLabel from "@/routes/visual-editor-2/helper/common/PredicateLabel.tsx";
+import NodePredicateLabel from "@/routes/visual-editor-2/helper/node/common/NodePredicateLabel.tsx";
 
 export default function EventNode({ data, id, selected }: NodeProps<Node<EventNodeData>>) {
 	const { onNodeDataChange, ocelInfo } = useContext(VisualEditorContext);
@@ -82,56 +82,21 @@ export default function EventNode({ data, id, selected }: NodeProps<Node<EventNo
 			className="w-52"
 		>
 			<div className="flex flex-col-reverse items-end absolute w-full bottom-full pb-0.5 nodrag -z-2">
-				{data.predicates.map((predicate) => {
-					return (
-						<ContextMenu key={predicate.id}>
-							<ContextMenuTrigger>
-								<button
-									onClick={() => {
-										setTimeout(() => {
-											setEarDraft(predicate);
-											setDialog("earEdit");
-										}, 100);
-									}}
-								>
-									<PredicateLabel
-										type={predicate.type}
-										mode={predicate.mode}
-										color={predicate.color}
-										label={predicate.attribute}
-										flavor="ear"
-									/>
-								</button>
-							</ContextMenuTrigger>
-							<ContextMenuContent>
-								<ContextMenuItem
-									onSelect={() => {
-										setTimeout(() => {
-											setEarDraft(predicate);
-											setDialog("earEdit");
-										}, 100);
-									}}
-								>
-									Edit {predicateTypeShortLabels[predicate.type]} {predicate.mode}
-								</ContextMenuItem>
-								<div className="border-t my-1 mx-2"></div>
-								<ContextMenuItem>Cancel</ContextMenuItem>
-								<ContextMenuItem
-									className="font-semibold text-red-400 focus:text-red-500"
-									onSelect={() => {
-										setTimeout(() => {
-											setEarDraft(predicate);
-											setDialog("earDelete");
-										}, 100);
-									}}
-								>
-									<LuTrash className="mr-1" /> Delete {predicateTypeShortLabels[predicate.type]}{" "}
-									{predicate.mode}
-								</ContextMenuItem>
-							</ContextMenuContent>
-						</ContextMenu>
-					);
-				})}
+				{data.predicates.map((predicate) => (
+					<NodePredicateLabel
+						key={predicate.id}
+						predicate={predicate}
+						disableEdit={false}
+						onEdit={() => {
+							setEarDraft(predicate);
+							setDialog("earEdit");
+						}}
+						onDelete={() => {
+							setEarDraft(predicate);
+							setDialog("earDelete");
+						}}
+					/>
+				))}
 			</div>
 			<ContextMenu>
 				<ContextMenuTrigger
