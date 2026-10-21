@@ -13,7 +13,7 @@ import type {
 	NodeDataTypes,
 	SubqueryNodePredicate,
 } from "@/routes/visual-editor-2/helper/flowTypes.ts";
-import { PredicateMode, PredicateType } from "@/routes/visual-editor-2/helper/types.ts";
+import { PredicateType } from "@/routes/visual-editor-2/helper/types.ts";
 import {
 	defaultNodePredicateData,
 	EVENT_NODE_TYPE,
@@ -30,6 +30,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Combobox } from "@/components/ui/combobox.tsx";
 import { type Edge, type Node, useReactFlow } from "@xyflow/react";
+import PredicateModeChooser from "@/routes/visual-editor-2/helper/common/PredicateModeChooser.tsx";
 
 interface SubqueryNodePredicateDialogProps {
 	open: boolean;
@@ -138,26 +139,12 @@ export default function SubqueryNodePredicateDialog({
 									Configure {predicateTypeShortLabels[nodePredicateDraft.type]}{" "}
 									{nodePredicateDraft.mode}
 								</span>
-								<ToggleGroup
-									className="justify-start mb-3 mt-1"
-									type="single"
-									value={nodePredicateDraft.mode}
-									onValueChange={(v) => {
-										if (v && nodePredicateDraft.type === PredicateType.ChildBindingSetSize) {
-											setNodePredicateDraft({
-												...nodePredicateDraft,
-												mode: v as PredicateMode,
-											});
-										}
-									}}
-								>
-									<ToggleGroupItem value={PredicateMode.Filter} variant={"outline"}>
-										Filter
-									</ToggleGroupItem>
-									<ToggleGroupItem value={PredicateMode.Constraint} variant={"outline"}>
-										Constraint
-									</ToggleGroupItem>
-								</ToggleGroup>
+								<PredicateModeChooser
+									predicateMode={nodePredicateDraft.mode}
+									setPredicateMode={(mode) =>
+										setNodePredicateDraft({ ...nodePredicateDraft, mode })
+									}
+								/>
 								<div className="flex items-center gap-2">
 									<Input
 										title="Minimum (Optional)"

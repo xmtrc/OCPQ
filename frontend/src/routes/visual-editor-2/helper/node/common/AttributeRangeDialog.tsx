@@ -3,7 +3,7 @@ import { Combobox } from "@/components/ui/combobox.tsx";
 import {
 	type AttributeRange,
 	type ObjectAttributeTimeMode,
-	PredicateMode,
+	type PredicateMode,
 	type PredicateType,
 	RangeType,
 	TimeMode,
@@ -23,7 +23,6 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import { DateTimeRangeInput } from "@/components/ui/date-time-range-input.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Label } from "@/components/ui/label.tsx";
@@ -31,6 +30,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { StringListInput } from "@/routes/visual-editor/helper/box/filter-helpers.tsx";
 import { type Edge, type Node, useReactFlow } from "@xyflow/react";
 import type { EdgeDataTypes, NodeDataTypes } from "@/routes/visual-editor-2/helper/flowTypes.ts";
+import PredicateModeChooser from "@/routes/visual-editor-2/helper/common/PredicateModeChooser.tsx";
 
 interface AttributeRangeDialogProps {
 	open: boolean;
@@ -140,19 +140,7 @@ export default function AttributeRangeDialog({
 					<AlertDialogDescription>
 						Use this predicate as a filter or a constraint.
 					</AlertDialogDescription>
-					<ToggleGroup
-						className="justify-start mb-3 mt-1"
-						type="single"
-						value={predicateMode}
-						onValueChange={(v) => v && setPredicateMode(v as PredicateMode)}
-					>
-						<ToggleGroupItem value={PredicateMode.Filter} variant={"outline"}>
-							Filter
-						</ToggleGroupItem>
-						<ToggleGroupItem value={PredicateMode.Constraint} variant={"outline"}>
-							Constraint
-						</ToggleGroupItem>
-					</ToggleGroup>
+					<PredicateModeChooser predicateMode={predicateMode} setPredicateMode={setPredicateMode} />
 					<div className="text-sm text-muted-foreground">
 						<span>Configure the predicate below.</span>
 						<div className="flex gap-2 my-3">

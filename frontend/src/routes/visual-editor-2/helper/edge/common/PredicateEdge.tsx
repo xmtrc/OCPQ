@@ -33,13 +33,13 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.tsx";
 import DeleteDialog from "@/routes/visual-editor-2/helper/common/DeleteDialog.tsx";
 import type { EdgeDataTypes } from "@/routes/visual-editor-2/helper/flowTypes.ts";
 import type { VariantProps } from "class-variance-authority";
 import PredicateLabel, {
 	type predicateLabelVariants,
 } from "@/routes/visual-editor-2/helper/common/PredicateLabel.tsx";
+import PredicateModeChooser from "@/routes/visual-editor-2/helper/common/PredicateModeChooser.tsx";
 
 interface PredicateEdgeProps extends VariantProps<typeof predicateLabelVariants> {
 	type: keyof typeof edgeTypes;
@@ -155,19 +155,7 @@ export default function PredicateEdge({
 								<span>Use this relation as a filter or as a constraint.</span>
 							</AlertDialogDescription>
 							<div className="text-sm text-muted-foreground">
-								<ToggleGroup
-									className="justify-start mb-3 mt-1"
-									type="single"
-									value={mode}
-									onValueChange={(v) => v && setMode(v as PredicateMode)}
-								>
-									<ToggleGroupItem value={PredicateMode.Filter} variant={"outline"}>
-										Filter
-									</ToggleGroupItem>
-									<ToggleGroupItem value={PredicateMode.Constraint} variant={"outline"}>
-										Constraint
-									</ToggleGroupItem>
-								</ToggleGroup>
+								<PredicateModeChooser predicateMode={mode} setPredicateMode={setMode} />
 								{children}
 							</div>
 						</AlertDialogHeader>
